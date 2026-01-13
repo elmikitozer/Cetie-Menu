@@ -12,8 +12,8 @@ import type {
 } from '@/components/menu/MenuPrintTemplate';
 
 // Chromium binary URL for serverless (hosted on GitHub releases)
-const CHROMIUM_PACK_URL =
-  'https://github.com/nicholaschiang/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar';
+// const CHROMIUM_PACK_URL =
+//   'https://github.com/nicholaschiang/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let chromiumModule: any = null;
