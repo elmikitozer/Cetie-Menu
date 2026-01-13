@@ -1,11 +1,11 @@
 /**
- * PDF Generation Service
+ * PDF Generation Service - Style Le Severo
  *
- * Génère un PDF A4 du menu à partir du template HTML.
+ * Génère un PDF A4 du menu au style bistrot parisien.
  * Compatible avec Vercel (utilise @sparticuz/chromium en production).
  */
 
-import type { MenuTemplateData, PriceUnit } from "@/components/menu/MenuPrintTemplate";
+import type { MenuTemplateData, PriceUnit, RestaurantInfo } from "@/components/menu/MenuPrintTemplate";
 
 // Lazy imports for serverless
 let chromiumPromise: Promise<typeof import("@sparticuz/chromium")> | null = null;
@@ -26,19 +26,55 @@ async function getPuppeteer() {
 }
 
 /**
- * Génère le HTML complet pour le PDF
+ * Format date in Severo style: "13-janv.-26"
+ */
+function formatDateSevero(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00");
+  const day = date.getDate();
+  const monthNames = [
+    "janv.", "févr.", "mars", "avr.", "mai", "juin",
+    "juil.", "août", "sept.", "oct.", "nov.", "déc."
+  ];
+  const month = monthNames[date.getMonth()];
+  const year = date.getFullYear().toString().slice(-2);
+  return `${day}-${month}-${year}`;
+}
+
+/**
+ * Format price with 2 decimals, comma separator
+ */
+function formatPrice(price: number, priceUnit: PriceUnit = "FIXED"): string {
+  const formatted = price.toFixed(2).replace(".", ",");
+  if (priceUnit === "PER_PERSON") {
+    return `${formatted} €`;
+  }
+  return `${formatted} €`;
+}
+
+/**
+ * Génère le HTML complet pour le PDF - Style Le Severo
  */
 function generateMenuHtml(data: MenuTemplateData): string {
-  const { restaurantName, date, items, categories, showPrices = true } = data;
+  const {
+    restaurantName,
+    date,
+    items,
+    categories,
+    showPrices = true,
+    restaurantInfo,
+  } = data;
+
+  // Default restaurant info (Le Severo style)
+  const info: RestaurantInfo = {
+    openingDays: restaurantInfo?.openingDays ?? "du lundi au vendredi",
+    serviceHours: restaurantInfo?.serviceHours ?? "12h-14h   19h30-21h30",
+    holidayNotice: restaurantInfo?.holidayNotice ?? "",
+    meatOrigin: restaurantInfo?.meatOrigin ?? "Le bœuf est d'origine allemande ou française le veau est hollandais.",
+    paymentNotice: restaurantInfo?.paymentNotice ?? "Devant la recrudescence des chèques impayés, nous vous prions de régler par Carte Bleue, espèces ou tickets restaurant (article 40 décret 92-456 du 22/05/92)",
+  };
 
   // Format date
-  const dateObj = new Date(date + "T12:00:00");
-  const formattedDate = dateObj.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const formattedDate = formatDateSevero(date);
 
   // Group items by category
   const sortedCategories = [...categories].sort(
@@ -55,43 +91,64 @@ function generateMenuHtml(data: MenuTemplateData): string {
 
   const uncategorizedItems = items.filter((item) => !item.category_id);
 
-  // Format price helper
-  const formatPrice = (price: number, priceUnit: PriceUnit = "FIXED") => {
-    const formatted = new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR",
-    }).format(price);
-    return priceUnit === "PER_PERSON" ? `${formatted} / pers.` : formatted;
+  // Find Boisson category
+  const boissonCategory = sortedCategories.find(
+    (c) => c.name.toLowerCase() === "boisson"
+  );
+  const boissonItems = boissonCategory ? itemsByCategory[boissonCategory.id] || [] : [];
+
+  // Other categories (excluding Boisson)
+  const mainCategories = sortedCategories.filter(
+    (c) => c.name.toLowerCase() !== "boisson"
+  );
+
+  // Category titles mapping
+  const categoryTitles: Record<string, string> = {
+    "Entrée": "Entrées",
+    "Plat": "Plats",
+    "Fromage": "Fromages",
+    "Dessert": "Desserts",
   };
 
   // Generate item HTML
   const generateItemHtml = (item: typeof items[0]) => {
-    const headerClass = showPrices ? "menu-item-header" : "menu-item-header menu-item-header-no-price";
     const showPrice = showPrices && item.price != null;
-
     return `
-      <li class="menu-item">
-        <div class="${headerClass}">
-          <span class="menu-item-name">${escapeHtml(item.name)}</span>
-          ${showPrice ? `<span class="menu-item-price">${formatPrice(item.price!, item.price_unit)}</span>` : ""}
-        </div>
-        ${item.description ? `<p class="menu-item-description">${escapeHtml(item.description)}</p>` : ""}
+      <li class="severo-item">
+        <span class="severo-item-name">${escapeHtml(item.name)}</span>
+        ${showPrice ? `<span class="severo-item-price">${formatPrice(item.price!, item.price_unit)}</span>` : ""}
       </li>
     `;
   };
 
+  // Generate boisson section HTML
+  const boissonHtml = boissonItems.length > 0 ? `
+    <section class="severo-boisson-section">
+      ${boissonItems.map((item) => {
+        const showPrice = showPrices && item.price != null;
+        return `
+          <div class="severo-boisson-item">
+            <span class="severo-boisson-name">${escapeHtml(item.name)}</span>
+            ${showPrice ? `<span class="severo-boisson-price">${formatPrice(item.price!, item.price_unit)}</span>` : ""}
+          </div>
+        `;
+      }).join("")}
+    </section>
+  ` : "";
+
   // Generate categories HTML
-  const categoriesHtml = sortedCategories
+  const categoriesHtml = mainCategories
     .map((category) => {
       const categoryItems = itemsByCategory[category.id];
       if (!categoryItems || categoryItems.length === 0) return "";
 
+      const displayTitle = categoryTitles[category.name] || category.name;
       const itemsHtml = categoryItems.map(generateItemHtml).join("");
 
       return `
-        <section class="menu-category">
-          <h2 class="menu-category-title">${escapeHtml(category.name)}</h2>
-          <ul class="menu-items">${itemsHtml}</ul>
+        <section class="severo-category">
+          <h2 class="severo-category-title">${escapeHtml(displayTitle)}</h2>
+          <ul class="severo-items-list">${itemsHtml}</ul>
         </section>
       `;
     })
@@ -101,14 +158,23 @@ function generateMenuHtml(data: MenuTemplateData): string {
   const uncategorizedHtml =
     uncategorizedItems.length > 0
       ? `
-        <section class="menu-category">
-          <h2 class="menu-category-title">Autres</h2>
-          <ul class="menu-items">
+        <section class="severo-category">
+          <h2 class="severo-category-title">Autres</h2>
+          <ul class="severo-items-list">
             ${uncategorizedItems.map(generateItemHtml).join("")}
           </ul>
         </section>
       `
       : "";
+
+  // Generate footer HTML
+  const footerHtml = `
+    <footer class="severo-footer">
+      ${info.holidayNotice ? `<p class="severo-footer-holiday">${escapeHtml(info.holidayNotice)}</p>` : ""}
+      ${info.meatOrigin ? `<p class="severo-footer-meat">${escapeHtml(info.meatOrigin)}</p>` : ""}
+      ${info.paymentNotice ? `<p class="severo-footer-payment">${escapeHtml(info.paymentNotice)}</p>` : ""}
+    </footer>
+  `;
 
   return `<!DOCTYPE html>
 <html lang="fr">
@@ -117,29 +183,39 @@ function generateMenuHtml(data: MenuTemplateData): string {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Menu - ${escapeHtml(restaurantName)}</title>
   <style>
-    ${getMenuStyles(showPrices)}
+    ${getSeveroStyles()}
   </style>
 </head>
 <body>
-  <div class="menu-container">
-    <header class="menu-header">
-      <h1 class="menu-restaurant-name">${escapeHtml(restaurantName)}</h1>
-      <div class="menu-title">Menu du jour</div>
-      <div class="menu-date">${formattedDate}</div>
+  <div class="severo-menu-container">
+    <header class="severo-header">
+      <div class="severo-header-top">
+        <span class="severo-header-left">Carafe d'eau gratuite</span>
+        <span class="severo-header-right">Service compris 15%</span>
+      </div>
+
+      <div class="severo-header-info">
+        <span class="severo-restaurant-name">${escapeHtml(restaurantName)}</span>
+        <span class="severo-opening">est ouvert ${escapeHtml(info.openingDays || "")}</span>
+      </div>
+
+      <div class="severo-header-date">
+        Aujourd'hui ${formattedDate}
+      </div>
+
+      <div class="severo-header-hours">
+        Service ${escapeHtml(info.serviceHours || "")}
+      </div>
     </header>
 
-    <div class="menu-divider">
-      <span class="menu-divider-ornament">✦</span>
-    </div>
+    ${boissonHtml}
 
-    <main class="menu-content">
+    <main class="severo-menu-content">
       ${categoriesHtml}
       ${uncategorizedHtml}
     </main>
 
-    <footer class="menu-footer">
-      <p class="menu-footer-text">Bon appétit !</p>
-    </footer>
+    ${footerHtml}
   </div>
 </body>
 </html>`;
@@ -158,12 +234,9 @@ function escapeHtml(text: string): string {
 }
 
 /**
- * CSS styles pour le PDF (embedded pour autonomie)
- *
- * DIRECTION ARTISTIQUE :
- * Modifier ces styles pour changer l'apparence du PDF
+ * CSS styles pour le PDF - Style Le Severo
  */
-function getMenuStyles(showPrices: boolean): string {
+function getSeveroStyles(): string {
   return `
     * {
       margin: 0;
@@ -172,163 +245,185 @@ function getMenuStyles(showPrices: boolean): string {
     }
 
     body {
-      font-family: Georgia, "Times New Roman", serif;
+      font-family: "Times New Roman", Georgia, serif;
       color: #1a1a1a;
       background: #ffffff;
-      line-height: 1.5;
+      line-height: 1.4;
+      font-size: 14px;
     }
 
-    .menu-container {
+    .severo-menu-container {
       width: 210mm;
       min-height: 297mm;
-      padding: 20mm 25mm;
+      padding: 15mm 20mm;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
     }
 
     /* Header */
-    .menu-header {
+    .severo-header {
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #cccccc;
+      padding-bottom: 16px;
     }
 
-    .menu-restaurant-name {
-      font-size: 36px;
-      font-weight: 700;
-      margin: 0 0 8px 0;
-      letter-spacing: 0.02em;
-      color: #1a1a1a;
+    .severo-header-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #4a4a4a;
+      margin-bottom: 12px;
     }
 
-    .menu-title {
-      font-size: 18px;
-      font-weight: 400;
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      color: #2563eb;
-      margin-bottom: 8px;
-    }
-
-    .menu-date {
-      font-size: 14px;
-      color: #666666;
+    .severo-header-left,
+    .severo-header-right {
       font-style: italic;
     }
 
-    /* Divider */
-    .menu-divider {
+    .severo-header-info {
+      margin-bottom: 8px;
+    }
+
+    .severo-restaurant-name {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .severo-opening {
+      font-size: 13px;
+      color: #4a4a4a;
+      margin-left: 8px;
+    }
+
+    .severo-header-date {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .severo-header-hours {
+      font-size: 12px;
+      color: #4a4a4a;
+      letter-spacing: 0.1em;
+    }
+
+    /* Boisson section */
+    .severo-boisson-section {
+      text-align: center;
+      margin-bottom: 20px;
+      padding: 12px 0;
+      border-bottom: 1px solid #cccccc;
+    }
+
+    .severo-boisson-item {
       display: flex;
-      align-items: center;
       justify-content: center;
-      margin: 24px 0;
+      align-items: baseline;
+      gap: 24px;
     }
 
-    .menu-divider::before,
-    .menu-divider::after {
-      content: "";
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, transparent, #e5e5e5, transparent);
-      max-width: 120px;
+    .severo-boisson-name {
+      font-size: 13px;
+      font-style: italic;
     }
 
-    .menu-divider-ornament {
-      padding: 0 16px;
-      color: #c9a227;
-      font-size: 18px;
+    .severo-boisson-price {
+      font-size: 13px;
+      font-weight: 600;
     }
 
     /* Content */
-    .menu-content {
+    .severo-menu-content {
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 28px;
+      gap: 20px;
     }
 
     /* Categories */
-    .menu-category {
+    .severo-category {
       break-inside: avoid;
     }
 
-    .menu-category-title {
-      font-size: 22px;
-      font-weight: 600;
-      margin: 0 0 14px 0;
-      padding-bottom: 6px;
-      border-bottom: 2px solid #2563eb;
+    .severo-category-title {
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 0 0 10px 0;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #2c2c2c;
       color: #1a1a1a;
-      text-transform: capitalize;
     }
 
     /* Items */
-    .menu-items {
+    .severo-items-list {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 6px;
     }
 
-    .menu-item {
-      break-inside: avoid;
-    }
-
-    .menu-item-header {
+    .severo-item {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       gap: 12px;
+      padding: 2px 0;
+      break-inside: avoid;
     }
 
-    .menu-item-name {
-      font-size: 16px;
-      font-weight: 500;
+    .severo-item-name {
+      font-size: 14px;
       color: #1a1a1a;
-    }
-
-    /* Ligne pointillée entre le nom et le prix (seulement si prix affichés) */
-    ${showPrices ? `
-    .menu-item-header::after {
-      content: "";
       flex: 1;
-      border-bottom: 1px dotted #e5e5e5;
-      margin: 0 8px;
-      min-width: 20px;
     }
-    ` : `
-    .menu-item-header-no-price {
-      justify-content: flex-start;
-    }
-    `}
 
-    .menu-item-price {
+    .severo-item-price {
       font-size: 14px;
       font-weight: 600;
       color: #1a1a1a;
       white-space: nowrap;
-      font-family: system-ui, -apple-system, sans-serif;
-    }
-
-    .menu-item-description {
-      font-size: 13px;
-      color: #666666;
-      margin: 4px 0 0 0;
-      font-style: italic;
-      line-height: 1.4;
+      min-width: 60px;
+      text-align: right;
     }
 
     /* Footer */
-    .menu-footer {
+    .severo-footer {
       margin-top: auto;
-      padding-top: 28px;
-      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #cccccc;
+      font-size: 10px;
+      color: #6a6a6a;
+      line-height: 1.5;
     }
 
-    .menu-footer-text {
-      font-size: 16px;
+    .severo-footer p {
+      margin: 0 0 8px 0;
+    }
+
+    .severo-footer p:last-child {
+      margin-bottom: 0;
+    }
+
+    .severo-footer-holiday {
+      font-weight: 600;
       font-style: italic;
-      color: #666666;
+      text-align: center;
+      font-size: 11px;
+      color: #4a4a4a;
+    }
+
+    .severo-footer-meat {
+      font-style: italic;
+    }
+
+    .severo-footer-payment {
+      font-size: 9px;
     }
 
     @page {

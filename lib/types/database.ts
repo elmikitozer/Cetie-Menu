@@ -95,6 +95,7 @@ export interface Database {
           name: string;
           description: string | null;
           price: number | null;
+          price_unit: "FIXED" | "PER_PERSON";
           is_active: boolean;
           created_at: string;
         };
@@ -105,6 +106,7 @@ export interface Database {
           name: string;
           description?: string | null;
           price?: number | null;
+          price_unit?: "FIXED" | "PER_PERSON";
           is_active?: boolean;
           created_at?: string;
         };
@@ -115,6 +117,7 @@ export interface Database {
           name?: string;
           description?: string | null;
           price?: number | null;
+          price_unit?: "FIXED" | "PER_PERSON";
           is_active?: boolean;
           created_at?: string;
         };
@@ -125,6 +128,7 @@ export interface Database {
           restaurant_id: string;
           date: string;
           is_published: boolean;
+          show_prices: boolean;
           created_at: string;
         };
         Insert: {
@@ -132,6 +136,7 @@ export interface Database {
           restaurant_id: string;
           date: string;
           is_published?: boolean;
+          show_prices?: boolean;
           created_at?: string;
         };
         Update: {
@@ -139,6 +144,7 @@ export interface Database {
           restaurant_id?: string;
           date?: string;
           is_published?: boolean;
+          show_prices?: boolean;
           created_at?: string;
         };
       };

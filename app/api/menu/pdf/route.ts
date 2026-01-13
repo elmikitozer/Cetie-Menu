@@ -2,6 +2,7 @@
  * Route API: /api/menu/pdf
  *
  * Génère et télécharge le PDF du menu du jour.
+ * Style Le Severo - bistrot parisien.
  *
  * Query params:
  * - slug: slug du restaurant (required)
@@ -11,7 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generateMenuPdf } from "@/lib/pdf/generate-menu-pdf";
-import type { MenuTemplateData } from "@/components/menu/MenuPrintTemplate";
+import type { MenuTemplateData, PriceUnit } from "@/components/menu/MenuPrintTemplate";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30; // Vercel timeout
@@ -60,10 +61,10 @@ export async function GET(request: NextRequest) {
       name: string;
     };
 
-    // 2. Fetch daily menu for the date
+    // 2. Fetch daily menu for the date (including show_prices)
     const { data: menu, error: menuError } = await db
       .from("daily_menus")
-      .select("id, is_published")
+      .select("id, is_published, show_prices")
       .eq("restaurant_id", restaurantId)
       .eq("date", date)
       .single();
@@ -83,7 +84,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { id: menuId } = menu as { id: string };
+    const { id: menuId, show_prices: showPrices } = menu as {
+      id: string;
+      show_prices: boolean;
+    };
 
     // 3. Fetch menu items
     const { data: menuItems, error: itemsError } = await db
@@ -112,11 +116,11 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 4. Fetch products
+    // 4. Fetch products (including price_unit)
     const productIds = items.map((item) => item.product_id);
     const { data: productsData, error: productsError } = await db
       .from("products")
-      .select("id, name, description, price, category_id")
+      .select("id, name, description, price, price_unit, category_id")
       .in("id", productIds);
 
     if (productsError) {
@@ -132,6 +136,7 @@ export async function GET(request: NextRequest) {
       name: string;
       description: string | null;
       price: number | null;
+      price_unit: PriceUnit;
       category_id: string | null;
     }>;
 
@@ -164,8 +169,16 @@ export async function GET(request: NextRequest) {
     const templateData: MenuTemplateData = {
       restaurantName,
       date,
-      items: orderedProducts,
+      items: orderedProducts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        price: p.price,
+        price_unit: p.price_unit,
+        category_id: p.category_id,
+      })),
       categories,
+      showPrices: showPrices ?? true,
     };
 
     // 8. Generate PDF

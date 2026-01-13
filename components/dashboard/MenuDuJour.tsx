@@ -8,6 +8,7 @@ import {
   saveDailyMenu,
   getRestaurantSlug,
   updateMenuShowPrices,
+  duplicateMenuFromDate,
   type ProductWithCategory,
 } from "@/app/actions/daily-menu";
 import {
@@ -35,6 +36,8 @@ export function MenuDuJour() {
   const [saving, setSaving] = useState(false);
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
   const [showPrices, setShowPrices] = useState(true);
+  const [duplicating, setDuplicating] = useState(false);
+  const [showDuplicateConfirm, setShowDuplicateConfirm] = useState(false);
 
   // Group products by category
   const groupedProducts: GroupedProducts = {};
@@ -180,6 +183,32 @@ export function MenuDuJour() {
     }
   };
 
+  const handleDuplicateFromYesterday = async (confirmOverwrite = false) => {
+    setDuplicating(true);
+
+    // "Hier" = selectedDate - 1 jour
+    const sourceDate = navigateDateUtil(selectedDate, -1);
+
+    const result = await duplicateMenuFromDate(sourceDate, selectedDate, confirmOverwrite);
+
+    if (result.needsConfirmation) {
+      setShowDuplicateConfirm(true);
+      setDuplicating(false);
+      return;
+    }
+
+    if (result.error) {
+      toast.error(result.error, { duration: 5000 });
+    } else if (result.success) {
+      toast.success(`Menu dupliqué ! (${result.itemsCopied} items copiés)`, { duration: 3000 });
+      // Reload data to show the duplicated menu
+      await loadData();
+    }
+
+    setDuplicating(false);
+    setShowDuplicateConfirm(false);
+  };
+
   const navigateDate = (days: number) => {
     setSelectedDate(navigateDateUtil(selectedDate, days));
   };
@@ -247,6 +276,29 @@ export function MenuDuJour() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
+          </button>
+        </div>
+
+        {/* Duplicate from yesterday button */}
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => handleDuplicateFromYesterday(false)}
+            disabled={duplicating}
+            className="w-full py-2 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {duplicating ? (
+              <>
+                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                Duplication...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                Dupliquer depuis hier
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -409,6 +461,33 @@ export function MenuDuJour() {
 
       {/* Spacer for fixed buttons */}
       <div className="h-24" />
+
+      {/* Duplicate confirmation modal */}
+      {showDuplicateConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-semibold mb-2">Écraser le menu existant ?</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Un menu existe déjà pour cette date. Voulez-vous le remplacer par le menu de la veille ?
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDuplicateConfirm(false)}
+                className="flex-1 py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => handleDuplicateFromYesterday(true)}
+                disabled={duplicating}
+                className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+              >
+                {duplicating ? "..." : "Confirmer"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

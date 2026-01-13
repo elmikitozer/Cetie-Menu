@@ -616,6 +616,7 @@ export function ProduitsContent() {
           </div>
         </div>
       )}
+
     </div>
   );
 }

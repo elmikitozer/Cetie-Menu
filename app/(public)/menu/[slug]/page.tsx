@@ -5,6 +5,7 @@ import type { Restaurant } from "@/lib/types/database";
 import {
   MenuPrintTemplate,
   type MenuTemplateData,
+  type PriceUnit,
 } from "@/components/menu/MenuPrintTemplate";
 
 interface Props {
@@ -72,12 +73,12 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any;
 
-  // Fetch menu for the selected date
+  // Fetch menu for the selected date (including show_prices)
   // Note: We fetch without is_published filter for preview (when date param is provided)
   // If no date param, we only show published menus
   const query = db
     .from("daily_menus")
-    .select("id, date, is_published")
+    .select("id, date, is_published, show_prices")
     .eq("restaurant_id", restaurant.id)
     .eq("date", selectedDate);
 
@@ -97,6 +98,7 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
     id: string;
     date: string;
     is_published: boolean;
+    show_prices: boolean;
   };
 
   const dailyMenu = dailyMenuData as DailyMenuRow | null;
@@ -112,6 +114,7 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
       name: string;
       description: string | null;
       price: number | null;
+      price_unit: PriceUnit;
       category: {
         id: string;
         name: string;
@@ -138,11 +141,11 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
     }>;
 
     if (items.length > 0) {
-      // Fetch products for these items
+      // Fetch products for these items (including price_unit)
       const productIds = items.map((i) => i.product_id);
       const { data: productsData } = await db
         .from("products")
-        .select("id, name, description, price, category_id")
+        .select("id, name, description, price, price_unit, category_id")
         .in("id", productIds);
 
       const products = (productsData || []) as Array<{
@@ -150,6 +153,7 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
         name: string;
         description: string | null;
         price: number | null;
+        price_unit: PriceUnit;
         category_id: string | null;
       }>;
 
@@ -226,6 +230,7 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
             name: item.product!.name,
             description: item.product!.description,
             price: item.custom_price ?? item.product!.price,
+            price_unit: item.product!.price_unit,
             category_id: item.product!.category?.id || null,
           })),
         categories: sortedCategories
@@ -237,6 +242,7 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
               display_order: firstItem?.product?.category?.display_order ?? 99,
             };
           }),
+        showPrices: dailyMenu.show_prices ?? true,
       }
     : null;
 

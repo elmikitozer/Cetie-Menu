@@ -323,6 +323,155 @@ export type DashboardStats = {
   hasMenu: boolean;
 };
 
+/**
+ * Duplicate menu from one date to another
+ * @param sourceDate - Date to copy from (YYYY-MM-DD)
+ * @param targetDate - Date to copy to (YYYY-MM-DD)
+ * @param confirmOverwrite - If true, will overwrite existing target menu
+ */
+export async function duplicateMenuFromDate(
+  sourceDate: string,
+  targetDate: string,
+  confirmOverwrite: boolean = false
+): Promise<{
+  success?: boolean;
+  error?: string;
+  needsConfirmation?: boolean;
+  itemsCopied?: number;
+}> {
+  const supabase = await createClient();
+  const restaurantId = await getRestaurantId();
+
+  if (!restaurantId) {
+    return { error: "Non authentifié" };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any;
+
+  // 1. Get source menu
+  const { data: sourceMenuData, error: sourceError } = await db
+    .from("daily_menus")
+    .select("id, show_prices, is_published")
+    .eq("restaurant_id", restaurantId)
+    .eq("date", sourceDate)
+    .single();
+
+  if (sourceError && sourceError.code !== "PGRST116") {
+    console.error("Source menu fetch error:", sourceError);
+    return { error: "Erreur lors de la récupération du menu source" };
+  }
+
+  const sourceMenu = sourceMenuData as { id: string; show_prices: boolean; is_published: boolean } | null;
+
+  if (!sourceMenu) {
+    return { error: "Aucun menu trouvé pour la date source" };
+  }
+
+  // 2. Get source menu items
+  const { data: sourceItemsData, error: itemsError } = await db
+    .from("daily_menu_items")
+    .select("product_id, display_order")
+    .eq("daily_menu_id", sourceMenu.id)
+    .order("display_order");
+
+  if (itemsError) {
+    console.error("Source items fetch error:", itemsError);
+    return { error: "Erreur lors de la récupération des items source" };
+  }
+
+  const sourceItems = (sourceItemsData || []) as Array<{
+    product_id: string;
+    display_order: number;
+  }>;
+
+  if (sourceItems.length === 0) {
+    return { error: "Le menu source est vide" };
+  }
+
+  // 3. Check if target menu exists
+  const { data: targetMenuData } = await db
+    .from("daily_menus")
+    .select("id")
+    .eq("restaurant_id", restaurantId)
+    .eq("date", targetDate)
+    .single();
+
+  const targetMenu = targetMenuData as { id: string } | null;
+
+  // If target exists and no confirmation, ask for confirmation
+  if (targetMenu && !confirmOverwrite) {
+    return { needsConfirmation: true };
+  }
+
+  let targetMenuId: string;
+
+  // 4. Create or update target menu
+  if (targetMenu) {
+    targetMenuId = targetMenu.id;
+
+    // Delete existing items
+    const { error: deleteError } = await db
+      .from("daily_menu_items")
+      .delete()
+      .eq("daily_menu_id", targetMenuId);
+
+    if (deleteError) {
+      console.error("Delete target items error:", deleteError);
+      return { error: "Erreur lors de la suppression des items existants" };
+    }
+
+    // Update target menu settings (copy show_prices from source)
+    const { error: updateError } = await db
+      .from("daily_menus")
+      .update({ show_prices: sourceMenu.show_prices })
+      .eq("id", targetMenuId);
+
+    if (updateError) {
+      console.error("Update target menu error:", updateError);
+      return { error: "Erreur lors de la mise à jour du menu cible" };
+    }
+  } else {
+    // Create new menu
+    const { data: newMenuData, error: createError } = await db
+      .from("daily_menus")
+      .insert({
+        restaurant_id: restaurantId,
+        date: targetDate,
+        is_published: false, // Always unpublished when duplicating
+        show_prices: sourceMenu.show_prices,
+      })
+      .select("id")
+      .single();
+
+    if (createError || !newMenuData) {
+      console.error("Create target menu error:", createError);
+      return { error: "Erreur lors de la création du menu cible" };
+    }
+
+    targetMenuId = (newMenuData as { id: string }).id;
+  }
+
+  // 5. Insert items to target menu
+  const targetItemsData = sourceItems.map((item) => ({
+    daily_menu_id: targetMenuId,
+    product_id: item.product_id,
+    display_order: item.display_order,
+  }));
+
+  const { error: insertError } = await db
+    .from("daily_menu_items")
+    .insert(targetItemsData);
+
+  if (insertError) {
+    console.error("Insert target items error:", insertError);
+    return { error: "Erreur lors de la copie des items" };
+  }
+
+  revalidatePath("/dashboard/menu");
+  return { success: true, itemsCopied: sourceItems.length };
+}
+
 export async function getDashboardStats(): Promise<{ stats: DashboardStats | null; error?: string }> {
   const supabase = await createClient();
   const restaurantId = await getRestaurantId();

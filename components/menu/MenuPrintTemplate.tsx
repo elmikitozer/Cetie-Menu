@@ -1,10 +1,13 @@
 /**
  * MenuPrintTemplate - Template réutilisable pour l'affichage et l'export PDF du menu
  *
- * DIRECTION ARTISTIQUE (DA):
- * Pour modifier l'apparence du menu, éditez ce fichier et le fichier CSS associé :
- * - Ce composant : structure HTML du menu
- * - styles/menu-print.css : styles d'impression et de mise en page
+ * DIRECTION ARTISTIQUE (DA) - Style Le Severo:
+ * - En-tête: infos pratiques, nom restaurant, horaires
+ * - Date au centre
+ * - Boisson (champagne) au-dessus des entrées
+ * - Sections: Entrées / Plats / Fromages / Desserts
+ * - Prix alignés à droite avec 2 décimales
+ * - Footer: congés, mentions viandes, moyens de paiement
  */
 
 import "./menu-print.css";
@@ -26,12 +29,21 @@ export type MenuItem = {
   category_id: string | null;
 };
 
+export type RestaurantInfo = {
+  openingDays?: string; // e.g., "du lundi au vendredi"
+  serviceHours?: string; // e.g., "12h-14h / 19h30-21h30"
+  holidayNotice?: string; // e.g., "fermé pour les congés d'hiver du 24/12 au 4/01"
+  meatOrigin?: string; // e.g., "Le bœuf est d'origine allemande ou française..."
+  paymentNotice?: string; // e.g., "Devant la recrudescence des chèques impayés..."
+};
+
 export type MenuTemplateData = {
   restaurantName: string;
   date: string; // Format: YYYY-MM-DD
   items: MenuItem[];
   categories: MenuCategory[];
   showPrices?: boolean; // Default: true
+  restaurantInfo?: RestaurantInfo;
 };
 
 interface MenuPrintTemplateProps {
@@ -40,29 +52,48 @@ interface MenuPrintTemplateProps {
   mode?: "screen" | "print";
 }
 
-function formatDateFrench(dateStr: string): string {
+function formatDateSevero(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
-  return date.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const day = date.getDate();
+  const monthNames = [
+    "janv.", "févr.", "mars", "avr.", "mai", "juin",
+    "juil.", "août", "sept.", "oct.", "nov.", "déc."
+  ];
+  const month = monthNames[date.getMonth()];
+  const year = date.getFullYear().toString().slice(-2);
+  return `${day}-${month}-${year}`;
 }
 
 function formatPrice(price: number, priceUnit: PriceUnit = "FIXED"): string {
-  const formatted = new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-  }).format(price);
-  return priceUnit === "PER_PERSON" ? `${formatted} / pers.` : formatted;
+  // Format with 2 decimal places, French style
+  const formatted = price.toFixed(2).replace(".", ",");
+  if (priceUnit === "PER_PERSON") {
+    return `${formatted} €`;
+  }
+  return `${formatted} €`;
 }
 
 export function MenuPrintTemplate({
   data,
   mode = "screen",
 }: MenuPrintTemplateProps) {
-  const { restaurantName, date, items, categories, showPrices = true } = data;
+  const {
+    restaurantName,
+    date,
+    items,
+    categories,
+    showPrices = true,
+    restaurantInfo,
+  } = data;
+
+  // Default restaurant info (Le Severo style)
+  const info: RestaurantInfo = {
+    openingDays: restaurantInfo?.openingDays ?? "du lundi au vendredi",
+    serviceHours: restaurantInfo?.serviceHours ?? "12h-14h   19h30-21h30",
+    holidayNotice: restaurantInfo?.holidayNotice ?? "",
+    meatOrigin: restaurantInfo?.meatOrigin ?? "Le bœuf est d'origine allemande ou française le veau est hollandais.",
+    paymentNotice: restaurantInfo?.paymentNotice ?? "Devant la recrudescence des chèques impayés, nous vous prions de régler par Carte Bleue, espèces ou tickets restaurant (article 40 décret 92-456 du 22/05/92)",
+  };
 
   // Group items by category
   const itemsByCategory: Record<string, MenuItem[]> = {};
@@ -80,46 +111,86 @@ export function MenuPrintTemplate({
   // Items without category
   const uncategorizedItems = items.filter((item) => !item.category_id);
 
-  const formattedDate = formatDateFrench(date);
+  const formattedDate = formatDateSevero(date);
+
+  // Find Boisson category and separate it
+  const boissonCategory = sortedCategories.find(
+    (c) => c.name.toLowerCase() === "boisson"
+  );
+  const boissonItems = boissonCategory ? itemsByCategory[boissonCategory.id] || [] : [];
+
+  // Other categories (excluding Boisson)
+  const mainCategories = sortedCategories.filter(
+    (c) => c.name.toLowerCase() !== "boisson"
+  );
 
   return (
-    <div className={`menu-print-container menu-print-mode-${mode}`}>
-      {/* Header */}
-      <header className="menu-print-header">
-        <h1 className="menu-print-restaurant-name">{restaurantName}</h1>
-        <div className="menu-print-title">Menu du jour</div>
-        <div className="menu-print-date">{formattedDate}</div>
+    <div className={`severo-menu-container severo-menu-mode-${mode}`}>
+      {/* Top header bar */}
+      <header className="severo-header">
+        <div className="severo-header-top">
+          <span className="severo-header-left">Carafe d'eau gratuite</span>
+          <span className="severo-header-right">Service compris 15%</span>
+        </div>
+
+        <div className="severo-header-info">
+          <span className="severo-restaurant-name">{restaurantName}</span>
+          <span className="severo-opening">
+            est ouvert {info.openingDays}
+          </span>
+        </div>
+
+        <div className="severo-header-date">
+          Aujourd'hui {formattedDate}
+        </div>
+
+        <div className="severo-header-hours">
+          Service {info.serviceHours}
+        </div>
       </header>
 
-      {/* Decorative divider */}
-      <div className="menu-print-divider">
-        <span className="menu-print-divider-ornament">✦</span>
-      </div>
+      {/* Boisson section (champagne) - before main menu */}
+      {boissonItems.length > 0 && (
+        <section className="severo-boisson-section">
+          {boissonItems.map((item) => (
+            <div key={item.id} className="severo-boisson-item">
+              <span className="severo-boisson-name">{item.name}</span>
+              {showPrices && item.price != null && (
+                <span className="severo-boisson-price">
+                  {formatPrice(item.price, item.price_unit)}
+                </span>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
 
-      {/* Menu content */}
-      <main className="menu-print-content">
-        {sortedCategories.map((category) => {
+      {/* Main menu content */}
+      <main className="severo-menu-content">
+        {mainCategories.map((category) => {
           const categoryItems = itemsByCategory[category.id];
           if (!categoryItems || categoryItems.length === 0) return null;
 
+          // Map category names to French titles
+          const categoryTitles: Record<string, string> = {
+            "Entrée": "Entrées",
+            "Plat": "Plats",
+            "Fromage": "Fromages",
+            "Dessert": "Desserts",
+          };
+          const displayTitle = categoryTitles[category.name] || category.name;
+
           return (
-            <section key={category.id} className="menu-print-category">
-              <h2 className="menu-print-category-title">{category.name}</h2>
-              <ul className={`menu-print-items ${!showPrices ? "menu-print-items-no-price" : ""}`}>
+            <section key={category.id} className="severo-category">
+              <h2 className="severo-category-title">{displayTitle}</h2>
+              <ul className="severo-items-list">
                 {categoryItems.map((item) => (
-                  <li key={item.id} className="menu-print-item">
-                    <div className={`menu-print-item-header ${!showPrices ? "menu-print-item-header-no-price" : ""}`}>
-                      <span className="menu-print-item-name">{item.name}</span>
-                      {showPrices && item.price != null && (
-                        <span className="menu-print-item-price">
-                          {formatPrice(item.price, item.price_unit)}
-                        </span>
-                      )}
-                    </div>
-                    {item.description && (
-                      <p className="menu-print-item-description">
-                        {item.description}
-                      </p>
+                  <li key={item.id} className="severo-item">
+                    <span className="severo-item-name">{item.name}</span>
+                    {showPrices && item.price != null && (
+                      <span className="severo-item-price">
+                        {formatPrice(item.price, item.price_unit)}
+                      </span>
                     )}
                   </li>
                 ))}
@@ -130,23 +201,16 @@ export function MenuPrintTemplate({
 
         {/* Uncategorized items */}
         {uncategorizedItems.length > 0 && (
-          <section className="menu-print-category">
-            <h2 className="menu-print-category-title">Autres</h2>
-            <ul className={`menu-print-items ${!showPrices ? "menu-print-items-no-price" : ""}`}>
+          <section className="severo-category">
+            <h2 className="severo-category-title">Autres</h2>
+            <ul className="severo-items-list">
               {uncategorizedItems.map((item) => (
-                <li key={item.id} className="menu-print-item">
-                  <div className={`menu-print-item-header ${!showPrices ? "menu-print-item-header-no-price" : ""}`}>
-                    <span className="menu-print-item-name">{item.name}</span>
-                    {showPrices && item.price != null && (
-                      <span className="menu-print-item-price">
-                        {formatPrice(item.price, item.price_unit)}
-                      </span>
-                    )}
-                  </div>
-                  {item.description && (
-                    <p className="menu-print-item-description">
-                      {item.description}
-                    </p>
+                <li key={item.id} className="severo-item">
+                  <span className="severo-item-name">{item.name}</span>
+                  {showPrices && item.price != null && (
+                    <span className="severo-item-price">
+                      {formatPrice(item.price, item.price_unit)}
+                    </span>
                   )}
                 </li>
               ))}
@@ -156,8 +220,16 @@ export function MenuPrintTemplate({
       </main>
 
       {/* Footer */}
-      <footer className="menu-print-footer">
-        <p className="menu-print-footer-text">Bon appétit !</p>
+      <footer className="severo-footer">
+        {info.holidayNotice && (
+          <p className="severo-footer-holiday">{info.holidayNotice}</p>
+        )}
+        {info.meatOrigin && (
+          <p className="severo-footer-meat">{info.meatOrigin}</p>
+        )}
+        {info.paymentNotice && (
+          <p className="severo-footer-payment">{info.paymentNotice}</p>
+        )}
       </footer>
     </div>
   );

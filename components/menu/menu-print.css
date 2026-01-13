@@ -1,261 +1,286 @@
 /**
- * Menu Print Styles - Direction Artistique
+ * Menu Print Styles - Direction Artistique Le Severo
  *
- * POUR MODIFIER LA DA DU MENU :
- * Ce fichier contient tous les styles du template de menu.
- * Modifiez les variables CSS ci-dessous pour changer rapidement l'apparence.
+ * Style épuré et classique de bistrot parisien:
+ * - Typographie serif élégante
+ * - Mise en page simple et lisible
+ * - Prix alignés à droite
+ * - Header informatif, footer avec mentions légales
  */
 
 /* ==========================================================================
-   VARIABLES DE DESIGN - Modifier ici pour changer la DA
+   VARIABLES DE DESIGN - Style Le Severo
    ========================================================================== */
 
-.menu-print-container {
+.severo-menu-container {
   /* Couleurs */
-  --menu-bg: #ffffff;
-  --menu-text: #1a1a1a;
-  --menu-text-muted: #666666;
-  --menu-accent: #2563eb;
-  --menu-border: #e5e5e5;
-  --menu-divider-ornament: #c9a227;
+  --severo-bg: #ffffff;
+  --severo-text: #1a1a1a;
+  --severo-text-muted: #4a4a4a;
+  --severo-text-light: #6a6a6a;
+  --severo-border: #cccccc;
+  --severo-accent: #2c2c2c;
 
   /* Typographie */
-  --menu-font-family: "Georgia", "Times New Roman", serif;
-  --menu-font-family-sans: system-ui, -apple-system, sans-serif;
+  --severo-font-serif: "Times New Roman", "Georgia", serif;
+  --severo-font-sans: "Helvetica Neue", "Arial", sans-serif;
 
   /* Espacements */
-  --menu-padding: 40px;
-  --menu-section-gap: 32px;
-  --menu-item-gap: 16px;
+  --severo-section-gap: 20px;
+  --severo-item-gap: 6px;
 }
 
 /* ==========================================================================
    STRUCTURE DE BASE
    ========================================================================== */
 
-.menu-print-container {
-  background: var(--menu-bg);
-  color: var(--menu-text);
-  font-family: var(--menu-font-family);
+.severo-menu-container {
+  background: var(--severo-bg);
+  color: var(--severo-text);
+  font-family: var(--severo-font-serif);
   max-width: 800px;
   margin: 0 auto;
-  padding: var(--menu-padding);
+  padding: 32px 40px;
   min-height: 100%;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 /* Mode print : occupe toute la page A4 */
-.menu-print-mode-print {
+.severo-menu-mode-print {
   width: 210mm;
   min-height: 297mm;
-  padding: 20mm 25mm;
+  padding: 15mm 20mm;
   margin: 0;
   max-width: none;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ==========================================================================
-   HEADER
+   HEADER - Style Severo
    ========================================================================== */
 
-.menu-print-header {
+.severo-header {
   text-align: center;
-  margin-bottom: var(--menu-section-gap);
+  margin-bottom: var(--severo-section-gap);
+  border-bottom: 1px solid var(--severo-border);
+  padding-bottom: 16px;
 }
 
-.menu-print-restaurant-name {
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  letter-spacing: 0.02em;
-  color: var(--menu-text);
+.severo-header-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--severo-text-muted);
+  margin-bottom: 12px;
 }
 
-.menu-print-title {
-  font-size: 1.25rem;
-  font-weight: 400;
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  color: var(--menu-accent);
-  margin-bottom: 8px;
-}
-
-.menu-print-date {
-  font-size: 1rem;
-  color: var(--menu-text-muted);
+.severo-header-left,
+.severo-header-right {
   font-style: italic;
 }
 
+.severo-header-info {
+  margin-bottom: 8px;
+}
+
+.severo-restaurant-name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.severo-opening {
+  font-size: 13px;
+  color: var(--severo-text-muted);
+  margin-left: 8px;
+}
+
+.severo-header-date {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.severo-header-hours {
+  font-size: 12px;
+  color: var(--severo-text-muted);
+  letter-spacing: 0.1em;
+}
+
 /* ==========================================================================
-   DIVIDER DECORATIF
+   BOISSON SECTION (Champagne)
    ========================================================================== */
 
-.menu-print-divider {
+.severo-boisson-section {
+  text-align: center;
+  margin-bottom: var(--severo-section-gap);
+  padding: 12px 0;
+  border-bottom: 1px solid var(--severo-border);
+}
+
+.severo-boisson-item {
   display: flex;
-  align-items: center;
   justify-content: center;
-  margin: var(--menu-section-gap) 0;
+  align-items: baseline;
+  gap: 24px;
 }
 
-.menu-print-divider::before,
-.menu-print-divider::after {
-  content: "";
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    var(--menu-border),
-    transparent
-  );
-  max-width: 150px;
+.severo-boisson-name {
+  font-size: 13px;
+  font-style: italic;
 }
 
-.menu-print-divider-ornament {
-  padding: 0 16px;
-  color: var(--menu-divider-ornament);
-  font-size: 1.25rem;
+.severo-boisson-price {
+  font-size: 13px;
+  font-weight: 600;
 }
 
 /* ==========================================================================
-   CONTENU DU MENU
+   MENU CONTENT
    ========================================================================== */
 
-.menu-print-content {
+.severo-menu-content {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--menu-section-gap);
+  gap: var(--severo-section-gap);
 }
 
 /* ==========================================================================
    CATEGORIES
    ========================================================================== */
 
-.menu-print-category {
+.severo-category {
   margin: 0;
 }
 
-.menu-print-category-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0 0 var(--menu-item-gap) 0;
-  padding-bottom: 8px;
-  border-bottom: 2px solid var(--menu-accent);
-  color: var(--menu-text);
-  text-transform: capitalize;
+.severo-category-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px 0;
+  padding-bottom: 4px;
+  border-bottom: 2px solid var(--severo-accent);
+  color: var(--severo-text);
 }
 
 /* ==========================================================================
-   ITEMS DU MENU
+   ITEMS LIST
    ========================================================================== */
 
-.menu-print-items {
+.severo-items-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--menu-item-gap);
+  gap: var(--severo-item-gap);
 }
 
-.menu-print-item {
-  padding: 0;
-}
-
-.menu-print-item-header {
+.severo-item {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 16px;
+  gap: 12px;
+  padding: 2px 0;
 }
 
-.menu-print-item-name {
-  font-size: 1.125rem;
-  font-weight: 500;
-  color: var(--menu-text);
+.severo-item-name {
+  font-size: 14px;
+  color: var(--severo-text);
   flex: 1;
 }
 
-/* Ligne pointillée entre le nom et le prix */
-.menu-print-item-header::after {
-  content: "";
-  flex: 1;
-  border-bottom: 1px dotted var(--menu-border);
-  margin: 0 8px;
-  min-width: 20px;
-}
-
-.menu-print-item-price {
-  font-size: 1rem;
+.severo-item-price {
+  font-size: 14px;
   font-weight: 600;
-  color: var(--menu-text);
+  color: var(--severo-text);
   white-space: nowrap;
-  font-family: var(--menu-font-family-sans);
-}
-
-.menu-print-item-description {
-  font-size: 0.9rem;
-  color: var(--menu-text-muted);
-  margin: 4px 0 0 0;
-  font-style: italic;
-  line-height: 1.4;
+  min-width: 60px;
+  text-align: right;
 }
 
 /* ==========================================================================
-   MODE SANS PRIX
+   FOOTER - Mentions légales style Severo
    ========================================================================== */
 
-/* Supprimer la ligne pointillée quand pas de prix */
-.menu-print-item-header-no-price::after {
-  display: none;
-}
-
-/* Ajuster l'espacement quand pas de prix */
-.menu-print-items-no-price .menu-print-item-header {
-  justify-content: flex-start;
-}
-
-/* ==========================================================================
-   FOOTER
-   ========================================================================== */
-
-.menu-print-footer {
+.severo-footer {
   margin-top: auto;
-  padding-top: var(--menu-section-gap);
-  text-align: center;
+  padding-top: var(--severo-section-gap);
+  border-top: 1px solid var(--severo-border);
+  font-size: 10px;
+  color: var(--severo-text-light);
+  line-height: 1.5;
 }
 
-.menu-print-footer-text {
-  font-size: 1.125rem;
+.severo-footer p {
+  margin: 0 0 8px 0;
+}
+
+.severo-footer p:last-child {
+  margin-bottom: 0;
+}
+
+.severo-footer-holiday {
+  font-weight: 600;
   font-style: italic;
-  color: var(--menu-text-muted);
-  margin: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--severo-text-muted);
+}
+
+.severo-footer-meat {
+  font-style: italic;
+}
+
+.severo-footer-payment {
+  font-size: 9px;
 }
 
 /* ==========================================================================
    RESPONSIVE - Mode écran (non-print)
    ========================================================================== */
 
-.menu-print-mode-screen {
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+.severo-menu-mode-screen {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e5e5;
 }
 
 @media (max-width: 640px) {
-  .menu-print-mode-screen {
-    padding: 24px 20px;
+  .severo-menu-mode-screen {
+    padding: 20px 16px;
+    margin: 0 8px;
   }
 
-  .menu-print-mode-screen .menu-print-restaurant-name {
-    font-size: 1.75rem;
+  .severo-menu-mode-screen .severo-restaurant-name {
+    font-size: 16px;
   }
 
-  .menu-print-mode-screen .menu-print-category-title {
-    font-size: 1.25rem;
+  .severo-menu-mode-screen .severo-opening {
+    display: block;
+    margin-left: 0;
+    margin-top: 4px;
   }
 
-  .menu-print-mode-screen .menu-print-item-name {
-    font-size: 1rem;
+  .severo-menu-mode-screen .severo-header-top {
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+  }
+
+  .severo-menu-mode-screen .severo-category-title {
+    font-size: 14px;
+  }
+
+  .severo-menu-mode-screen .severo-item-name,
+  .severo-menu-mode-screen .severo-item-price {
+    font-size: 13px;
   }
 }
 
@@ -264,20 +289,38 @@
    ========================================================================== */
 
 @media print {
-  .menu-print-container {
+  .severo-menu-container {
     width: 100%;
     min-height: auto;
     padding: 0;
     margin: 0;
     box-shadow: none;
     border-radius: 0;
+    border: none;
   }
 
-  .menu-print-category {
+  .severo-category {
     break-inside: avoid;
   }
 
-  .menu-print-item {
+  .severo-item {
     break-inside: avoid;
   }
 }
+
+/* ==========================================================================
+   DARK MODE SUPPORT (écran uniquement)
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+  .severo-menu-mode-screen {
+    --severo-bg: #1a1a1a;
+    --severo-text: #f5f5f5;
+    --severo-text-muted: #b0b0b0;
+    --severo-text-light: #888888;
+    --severo-border: #404040;
+    --severo-accent: #e0e0e0;
+    border-color: #333;
+  }
+}
+
