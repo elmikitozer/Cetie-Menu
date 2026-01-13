@@ -7,10 +7,11 @@ import {
   type MenuTemplateData,
   type PriceUnit,
 } from "@/components/menu/MenuPrintTemplate";
+import { PrintModeHandler } from "@/components/menu/PrintModeHandler";
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ date?: string }>;
+  searchParams: Promise<{ date?: string; print?: string }>;
 }
 
 function formatDateDisplay(dateStr: string): string {
@@ -51,8 +52,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function PublicMenuPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { date: dateParam } = await searchParams;
+  const { date: dateParam, print: printParam } = await searchParams;
   const supabase = await createClient();
+  const isPrintMode = printParam === "1";
 
   // Use date from query param or default to today
   const selectedDate = dateParam || new Date().toISOString().split("T")[0];
@@ -246,11 +248,23 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
       }
     : null;
 
+  // Print mode - simplified layout for printing
+  if (isPrintMode && hasMenu) {
+    return (
+      <>
+        <PrintModeHandler />
+        <main className="print-page">
+          <MenuPrintTemplate data={templateData!} mode="print" />
+        </main>
+      </>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-gray-100 dark:bg-gray-950">
+    <main className="min-h-screen bg-gray-100 dark:bg-gray-950 print:hidden">
       {/* Preview banner */}
       {dailyMenu && !dailyMenu.is_published && (
-        <div className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-center py-2 text-sm font-medium">
+        <div className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-center py-2 text-sm font-medium no-print">
           Aperçu - Menu non publié
         </div>
       )}
@@ -267,12 +281,28 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
             </p>
           </div>
         ) : (
-          <MenuPrintTemplate data={templateData!} mode="screen" />
+          <>
+            <MenuPrintTemplate data={templateData!} mode="screen" />
+            {/* Download PDF button */}
+            <div className="max-w-lg mx-auto mt-6 text-center no-print">
+              <a
+                href={`/menu/${slug}?date=${selectedDate}&print=1`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Télécharger PDF
+              </a>
+            </div>
+          </>
         )}
       </div>
 
       {/* Footer */}
-      <footer className="text-center py-6 px-4 text-sm text-gray-500">
+      <footer className="text-center py-6 px-4 text-sm text-gray-500 no-print">
         {restaurant.address && <p>{restaurant.address}</p>}
         {restaurant.phone && <p>{restaurant.phone}</p>}
       </footer>

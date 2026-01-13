@@ -179,7 +179,8 @@ export function MenuDuJour() {
 
   const handleDownloadPdf = () => {
     if (restaurantSlug) {
-      window.open(`/api/menu/pdf?slug=${restaurantSlug}&date=${selectedDate}`, "_blank");
+      // Open print-friendly page in new tab - user can then save as PDF
+      window.open(`/menu/${restaurantSlug}?date=${selectedDate}&print=1`, "_blank");
     }
   };
 

@@ -142,9 +142,8 @@ vercel
 
 ### Notes techniques
 
-- **PDF Generation** : Utilise `puppeteer-core` + `@sparticuz/chromium` compatible Vercel serverless
-- **Max Duration** : 60 secondes pour la génération PDF (plan Pro requis pour >10s sur Hobby)
-- **Runtime** : La route `/api/menu/pdf` utilise le runtime Node.js
+- **PDF** : Impression navigateur via `window.print()` + CSS @media print (pas de serveur)
+- **Compatible** : Vercel Hobby (pas de dépendances lourdes comme Puppeteer)
 
 ### Checklist Déploiement Production
 
@@ -155,8 +154,8 @@ vercel
 - [ ] Build Vercel réussi (vérifier les logs)
 - [ ] Authentification email/password fonctionne
 - [ ] Authentification magic link fonctionne
-- [ ] Génération PDF fonctionne
 - [ ] Menu public accessible via slug
+- [ ] Bouton "Télécharger PDF" ouvre la page print et déclenche l'impression
 
 ## Fonctionnalités
 
@@ -171,6 +170,8 @@ vercel
 - Toggle affichage des prix
 
 ### Export PDF
+- **Impression navigateur** (window.print) - pas de serveur PDF
 - Style bistrot parisien (Le Severo)
-- Compatible Vercel serverless
-- Format A4, prêt à imprimer
+- Format A4 via CSS @media print
+- Compatible tous navigateurs (desktop + mobile)
+- Sur mobile iOS : Partager → Imprimer → Enregistrer en PDF
