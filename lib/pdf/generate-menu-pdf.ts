@@ -2,7 +2,7 @@
  * PDF Generation Service - Style Le Severo
  *
  * Génère un PDF A4 du menu au style bistrot parisien.
- * Compatible avec Vercel (utilise @sparticuz/chromium-min en production).
+ * Compatible avec Vercel (utilise @sparticuz/chromium en production).
  */
 
 import type {
@@ -11,10 +11,6 @@ import type {
   RestaurantInfo,
 } from '@/components/menu/MenuPrintTemplate';
 
-// Chromium binary URL for serverless (hosted on GitHub releases)
-// const CHROMIUM_PACK_URL =
-//   'https://github.com/nicholaschiang/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar';
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let chromiumModule: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,7 +18,7 @@ let puppeteerModule: any = null;
 
 async function getChromium() {
   if (!chromiumModule) {
-    chromiumModule = await import('@sparticuz/chromium-min');
+    chromiumModule = await import('@sparticuz/chromium');
   }
   return chromiumModule.default || chromiumModule;
 }
@@ -469,51 +465,21 @@ function getSeveroStyles(): string {
 
 /**
  * Génère le PDF du menu
- * Compatible Vercel Serverless avec @sparticuz/chromium-min
+ * Compatible Vercel Serverless avec @sparticuz/chromium
  */
 export async function generateMenuPdf(data: MenuTemplateData): Promise<Buffer> {
   const puppeteer = await getPuppeteer();
+  const chromium = await getChromium();
 
   // Configuration pour Vercel (production) vs local (development)
-  const isVercel = process.env.VERCEL === '1';
+  const isVercel = !!process.env.VERCEL;
 
-  let browser;
-
-  if (isVercel) {
-    // Vercel serverless environment - use @sparticuz/chromium-min
-    const chromium = await getChromium();
-    const executablePath = await chromium.executablePath();
-
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      defaultViewport: { width: 1200, height: 800 },
-      executablePath,
-      headless: true,
-    });
-  } else {
-    // Development - use local Chrome
-    const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-    const linuxPath = '/usr/bin/google-chrome';
-    const winPath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-
-    const fs = await import('fs');
-    let executablePath: string | undefined;
-
-    if (fs.existsSync(macPath)) {
-      executablePath = macPath;
-    } else if (fs.existsSync(linuxPath)) {
-      executablePath = linuxPath;
-    } else if (fs.existsSync(winPath)) {
-      executablePath = winPath;
-    }
-
-    browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      defaultViewport: { width: 1200, height: 800 },
-      executablePath,
-      headless: true,
-    });
-  }
+  const browser = await puppeteer.launch({
+    args: chromium.args,
+    defaultViewport: chromium.defaultViewport,
+    executablePath: isVercel ? await chromium.executablePath() : undefined,
+    headless: chromium.headless,
+  });
 
   try {
     const page = await browser.newPage();
