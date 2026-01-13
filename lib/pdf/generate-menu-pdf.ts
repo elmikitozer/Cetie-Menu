@@ -465,7 +465,7 @@ function getSeveroStyles(): string {
 
 /**
  * Génère le PDF du menu
- * Compatible Vercel Serverless avec @sparticuz/chromium
+ * Compatible Vercel Serverless avec @sparticuz/chromium v119
  */
 export async function generateMenuPdf(data: MenuTemplateData): Promise<Buffer> {
   const puppeteer = await getPuppeteer();
@@ -474,12 +474,22 @@ export async function generateMenuPdf(data: MenuTemplateData): Promise<Buffer> {
   // Configuration pour Vercel (production) vs local (development)
   const isVercel = !!process.env.VERCEL;
 
-  const browser = await puppeteer.launch({
-    args: chromium.args,
-    defaultViewport: chromium.defaultViewport,
-    executablePath: isVercel ? await chromium.executablePath() : undefined,
-    headless: chromium.headless,
-  });
+  let browser;
+  
+  if (isVercel) {
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    });
+  } else {
+    // Local development - use installed Chrome
+    browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      headless: true,
+    });
+  }
 
   try {
     const page = await browser.newPage();
