@@ -11,22 +11,23 @@ import type {
   RestaurantInfo,
 } from '@/components/menu/MenuPrintTemplate';
 
-// Lazy imports for serverless
-let chromiumPromise: Promise<typeof import('@sparticuz/chromium')> | null = null;
-let puppeteerPromise: Promise<typeof import('puppeteer-core')> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let chromiumModule: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let puppeteerModule: any = null;
 
 async function getChromium() {
-  if (!chromiumPromise) {
-    chromiumPromise = import('@sparticuz/chromium');
+  if (!chromiumModule) {
+    chromiumModule = await import('@sparticuz/chromium');
   }
-  return chromiumPromise;
+  return chromiumModule.default || chromiumModule;
 }
 
 async function getPuppeteer() {
-  if (!puppeteerPromise) {
-    puppeteerPromise = import('puppeteer-core');
+  if (!puppeteerModule) {
+    puppeteerModule = await import('puppeteer-core');
   }
-  return puppeteerPromise;
+  return puppeteerModule.default || puppeteerModule;
 }
 
 /**
@@ -467,44 +468,47 @@ function getSeveroStyles(): string {
  * Compatible Vercel Serverless avec @sparticuz/chromium
  */
 export async function generateMenuPdf(data: MenuTemplateData): Promise<Buffer> {
-  const chromium = await getChromium();
   const puppeteer = await getPuppeteer();
 
   // Configuration pour Vercel (production) vs local (development)
-  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
+  const isVercel = process.env.VERCEL === '1';
 
-  let executablePath: string;
-  let args: string[];
+  let browser;
 
-  if (isProduction) {
-    // Vercel serverless environment
-    executablePath = await chromium.default.executablePath();
-    args = chromium.default.args;
+  if (isVercel) {
+    // Vercel serverless environment - use @sparticuz/chromium
+    const chromium = await getChromium();
+
+    browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: { width: 1200, height: 800 },
+      executablePath: await chromium.executablePath(),
+      headless: true,
+    });
   } else {
-    // En développement, utiliser le Chrome local
+    // Development - use local Chrome
     const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
     const linuxPath = '/usr/bin/google-chrome';
     const winPath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
     const fs = await import('fs');
+    let executablePath: string | undefined;
+
     if (fs.existsSync(macPath)) {
       executablePath = macPath;
     } else if (fs.existsSync(linuxPath)) {
       executablePath = linuxPath;
     } else if (fs.existsSync(winPath)) {
       executablePath = winPath;
-    } else {
-      throw new Error('Chrome non trouvé. Installez Chrome ou définissez CHROME_PATH.');
     }
-    args = ['--no-sandbox', '--disable-setuid-sandbox'];
-  }
 
-  const browser = await puppeteer.default.launch({
-    args,
-    defaultViewport: { width: 1200, height: 800 },
-    executablePath,
-    headless: true,
-  });
+    browser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      defaultViewport: { width: 1200, height: 800 },
+      executablePath,
+      headless: true,
+    });
+  }
 
   try {
     const page = await browser.newPage();

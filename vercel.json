@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "app/api/menu/pdf/route.ts": {
+      "memory": 1024,
+      "maxDuration": 60
+    }
+  }
+}
+
