@@ -482,8 +482,6 @@ export async function generateMenuPdf(data: MenuTemplateData): Promise<Buffer> {
   if (isVercel) {
     // Vercel serverless environment - use @sparticuz/chromium-min
     const chromium = await getChromium();
-
-    // chromium-min downloads the binary from the URL at runtime
     const executablePath = await chromium.executablePath();
 
     browser = await puppeteer.launch({
