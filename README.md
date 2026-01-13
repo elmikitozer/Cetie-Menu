@@ -103,9 +103,74 @@ npm run start    # Serveur de production
 npm run lint     # Vérification ESLint
 ```
 
-## Prochaines étapes
+## Déploiement Vercel
 
-1. **CRUD Produits** - Ajouter/modifier/supprimer des produits
-2. **Menu du jour** - Sélection des produits disponibles
-3. **Publication** - Toggle pour publier le menu
-4. **Export PDF** - Génération via Playwright
+### Variables d'environnement
+
+Configurer ces variables dans Vercel (Settings → Environment Variables) :
+
+| Variable | Description | Exemple |
+|----------|-------------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL de votre projet Supabase | `https://xxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clé publique anonyme Supabase | `eyJhbGciOiJIUzI1...` |
+| `NEXT_PUBLIC_SITE_URL` | URL de votre site déployé | `https://monapp.vercel.app` |
+
+### Configuration Supabase pour Production
+
+1. **Site URL** : Dans Supabase Dashboard → Authentication → URL Configuration
+   - Définir **Site URL** : `https://votre-app.vercel.app`
+
+2. **Redirect URLs** : Ajouter ces URLs autorisées :
+   ```
+   https://votre-app.vercel.app/callback
+   https://votre-app.vercel.app/**
+   ```
+
+3. **Email Templates** (optionnel) : Dans Authentication → Email Templates
+   - Personnaliser les emails de confirmation et magic link
+
+### Déploiement
+
+```bash
+# Option 1: CLI Vercel
+npm i -g vercel
+vercel
+
+# Option 2: GitHub/GitLab
+# Connecter le repo dans le dashboard Vercel
+```
+
+### Notes techniques
+
+- **PDF Generation** : Utilise `puppeteer-core` + `@sparticuz/chromium` compatible Vercel serverless
+- **Max Duration** : 60 secondes pour la génération PDF (plan Pro requis pour >10s sur Hobby)
+- **Runtime** : La route `/api/menu/pdf` utilise le runtime Node.js
+
+### Checklist Déploiement Production
+
+- [ ] Variables d'environnement configurées sur Vercel
+- [ ] `NEXT_PUBLIC_SITE_URL` pointe vers l'URL Vercel
+- [ ] Site URL configuré dans Supabase Auth
+- [ ] Redirect URLs ajoutées dans Supabase Auth
+- [ ] Build Vercel réussi (vérifier les logs)
+- [ ] Authentification email/password fonctionne
+- [ ] Authentification magic link fonctionne
+- [ ] Génération PDF fonctionne
+- [ ] Menu public accessible via slug
+
+## Fonctionnalités
+
+### Authentification
+- **Email + Mot de passe** : Connexion classique
+- **Magic Link** : Connexion sans mot de passe via email
+
+### Menu du jour
+- Sélection des produits disponibles
+- Réorganisation par drag (à venir)
+- Duplication depuis hier
+- Toggle affichage des prix
+
+### Export PDF
+- Style bistrot parisien (Le Severo)
+- Compatible Vercel serverless
+- Format A4, prêt à imprimer

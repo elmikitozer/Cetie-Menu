@@ -129,7 +129,7 @@ export function MenuPrintTemplate({
       {/* Top header bar */}
       <header className="severo-header">
         <div className="severo-header-top">
-          <span className="severo-header-left">Carafe d'eau gratuite</span>
+          <span className="severo-header-left">Carafe d&apos;eau gratuite</span>
           <span className="severo-header-right">Service compris 15%</span>
         </div>
 
@@ -141,7 +141,7 @@ export function MenuPrintTemplate({
         </div>
 
         <div className="severo-header-date">
-          Aujourd'hui {formattedDate}
+          Aujourd&apos;hui {formattedDate}
         </div>
 
         <div className="severo-header-hours">

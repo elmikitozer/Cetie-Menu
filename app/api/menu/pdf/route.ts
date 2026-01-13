@@ -14,8 +14,10 @@ import { createClient } from "@/lib/supabase/server";
 import { generateMenuPdf } from "@/lib/pdf/generate-menu-pdf";
 import type { MenuTemplateData, PriceUnit } from "@/components/menu/MenuPrintTemplate";
 
+// Required for Vercel serverless with Puppeteer
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 30; // Vercel timeout
+export const maxDuration = 60; // Vercel timeout (60s max on Pro, 10s on Hobby)
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);

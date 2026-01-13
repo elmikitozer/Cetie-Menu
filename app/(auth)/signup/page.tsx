@@ -20,12 +20,15 @@ export default function SignupPage() {
     setError(null);
     setLoading(true);
 
+    // Use NEXT_PUBLIC_SITE_URL for production, fallback to window.location.origin
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/callback`,
+        emailRedirectTo: `${siteUrl}/callback`,
         data: {
           restaurant_name: restaurantName,
         },

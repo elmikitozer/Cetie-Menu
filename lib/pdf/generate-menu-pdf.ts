@@ -5,22 +5,26 @@
  * Compatible avec Vercel (utilise @sparticuz/chromium en production).
  */
 
-import type { MenuTemplateData, PriceUnit, RestaurantInfo } from "@/components/menu/MenuPrintTemplate";
+import type {
+  MenuTemplateData,
+  PriceUnit,
+  RestaurantInfo,
+} from '@/components/menu/MenuPrintTemplate';
 
 // Lazy imports for serverless
-let chromiumPromise: Promise<typeof import("@sparticuz/chromium")> | null = null;
-let puppeteerPromise: Promise<typeof import("puppeteer-core")> | null = null;
+let chromiumPromise: Promise<typeof import('@sparticuz/chromium')> | null = null;
+let puppeteerPromise: Promise<typeof import('puppeteer-core')> | null = null;
 
 async function getChromium() {
   if (!chromiumPromise) {
-    chromiumPromise = import("@sparticuz/chromium");
+    chromiumPromise = import('@sparticuz/chromium');
   }
   return chromiumPromise;
 }
 
 async function getPuppeteer() {
   if (!puppeteerPromise) {
-    puppeteerPromise = import("puppeteer-core");
+    puppeteerPromise = import('puppeteer-core');
   }
   return puppeteerPromise;
 }
@@ -29,11 +33,21 @@ async function getPuppeteer() {
  * Format date in Severo style: "13-janv.-26"
  */
 function formatDateSevero(dateStr: string): string {
-  const date = new Date(dateStr + "T12:00:00");
+  const date = new Date(dateStr + 'T12:00:00');
   const day = date.getDate();
   const monthNames = [
-    "janv.", "févr.", "mars", "avr.", "mai", "juin",
-    "juil.", "août", "sept.", "oct.", "nov.", "déc."
+    'janv.',
+    'févr.',
+    'mars',
+    'avr.',
+    'mai',
+    'juin',
+    'juil.',
+    'août',
+    'sept.',
+    'oct.',
+    'nov.',
+    'déc.',
   ];
   const month = monthNames[date.getMonth()];
   const year = date.getFullYear().toString().slice(-2);
@@ -43,9 +57,9 @@ function formatDateSevero(dateStr: string): string {
 /**
  * Format price with 2 decimals, comma separator
  */
-function formatPrice(price: number, priceUnit: PriceUnit = "FIXED"): string {
-  const formatted = price.toFixed(2).replace(".", ",");
-  if (priceUnit === "PER_PERSON") {
+function formatPrice(price: number, priceUnit: PriceUnit = 'FIXED'): string {
+  const formatted = price.toFixed(2).replace('.', ',');
+  if (priceUnit === 'PER_PERSON') {
     return `${formatted} €`;
   }
   return `${formatted} €`;
@@ -55,31 +69,26 @@ function formatPrice(price: number, priceUnit: PriceUnit = "FIXED"): string {
  * Génère le HTML complet pour le PDF - Style Le Severo
  */
 function generateMenuHtml(data: MenuTemplateData): string {
-  const {
-    restaurantName,
-    date,
-    items,
-    categories,
-    showPrices = true,
-    restaurantInfo,
-  } = data;
+  const { restaurantName, date, items, categories, showPrices = true, restaurantInfo } = data;
 
   // Default restaurant info (Le Severo style)
   const info: RestaurantInfo = {
-    openingDays: restaurantInfo?.openingDays ?? "du lundi au vendredi",
-    serviceHours: restaurantInfo?.serviceHours ?? "12h-14h   19h30-21h30",
-    holidayNotice: restaurantInfo?.holidayNotice ?? "",
-    meatOrigin: restaurantInfo?.meatOrigin ?? "Le bœuf est d'origine allemande ou française le veau est hollandais.",
-    paymentNotice: restaurantInfo?.paymentNotice ?? "Devant la recrudescence des chèques impayés, nous vous prions de régler par Carte Bleue, espèces ou tickets restaurant (article 40 décret 92-456 du 22/05/92)",
+    openingDays: restaurantInfo?.openingDays ?? 'du lundi au vendredi',
+    serviceHours: restaurantInfo?.serviceHours ?? '12h-14h   19h30-21h30',
+    holidayNotice: restaurantInfo?.holidayNotice ?? '',
+    meatOrigin:
+      restaurantInfo?.meatOrigin ??
+      "Le bœuf est d'origine allemande ou française le veau est hollandais.",
+    paymentNotice:
+      restaurantInfo?.paymentNotice ??
+      'Devant la recrudescence des chèques impayés, nous vous prions de régler par Carte Bleue, espèces ou tickets restaurant (article 40 décret 92-456 du 22/05/92)',
   };
 
   // Format date
   const formattedDate = formatDateSevero(date);
 
   // Group items by category
-  const sortedCategories = [...categories].sort(
-    (a, b) => a.display_order - b.display_order
-  );
+  const sortedCategories = [...categories].sort((a, b) => a.display_order - b.display_order);
 
   const itemsByCategory: Record<string, typeof items> = {};
   sortedCategories.forEach((cat) => {
@@ -92,58 +101,70 @@ function generateMenuHtml(data: MenuTemplateData): string {
   const uncategorizedItems = items.filter((item) => !item.category_id);
 
   // Find Boisson category
-  const boissonCategory = sortedCategories.find(
-    (c) => c.name.toLowerCase() === "boisson"
-  );
+  const boissonCategory = sortedCategories.find((c) => c.name.toLowerCase() === 'boisson');
   const boissonItems = boissonCategory ? itemsByCategory[boissonCategory.id] || [] : [];
 
   // Other categories (excluding Boisson)
-  const mainCategories = sortedCategories.filter(
-    (c) => c.name.toLowerCase() !== "boisson"
-  );
+  const mainCategories = sortedCategories.filter((c) => c.name.toLowerCase() !== 'boisson');
 
   // Category titles mapping
   const categoryTitles: Record<string, string> = {
-    "Entrée": "Entrées",
-    "Plat": "Plats",
-    "Fromage": "Fromages",
-    "Dessert": "Desserts",
+    Entrée: 'Entrées',
+    Plat: 'Plats',
+    Fromage: 'Fromages',
+    Dessert: 'Desserts',
   };
 
   // Generate item HTML
-  const generateItemHtml = (item: typeof items[0]) => {
+  const generateItemHtml = (item: (typeof items)[0]) => {
     const showPrice = showPrices && item.price != null;
     return `
       <li class="severo-item">
         <span class="severo-item-name">${escapeHtml(item.name)}</span>
-        ${showPrice ? `<span class="severo-item-price">${formatPrice(item.price!, item.price_unit)}</span>` : ""}
+        ${
+          showPrice
+            ? `<span class="severo-item-price">${formatPrice(item.price!, item.price_unit)}</span>`
+            : ''
+        }
       </li>
     `;
   };
 
   // Generate boisson section HTML
-  const boissonHtml = boissonItems.length > 0 ? `
+  const boissonHtml =
+    boissonItems.length > 0
+      ? `
     <section class="severo-boisson-section">
-      ${boissonItems.map((item) => {
-        const showPrice = showPrices && item.price != null;
-        return `
+      ${boissonItems
+        .map((item) => {
+          const showPrice = showPrices && item.price != null;
+          return `
           <div class="severo-boisson-item">
             <span class="severo-boisson-name">${escapeHtml(item.name)}</span>
-            ${showPrice ? `<span class="severo-boisson-price">${formatPrice(item.price!, item.price_unit)}</span>` : ""}
+            ${
+              showPrice
+                ? `<span class="severo-boisson-price">${formatPrice(
+                    item.price!,
+                    item.price_unit
+                  )}</span>`
+                : ''
+            }
           </div>
         `;
-      }).join("")}
+        })
+        .join('')}
     </section>
-  ` : "";
+  `
+      : '';
 
   // Generate categories HTML
   const categoriesHtml = mainCategories
     .map((category) => {
       const categoryItems = itemsByCategory[category.id];
-      if (!categoryItems || categoryItems.length === 0) return "";
+      if (!categoryItems || categoryItems.length === 0) return '';
 
       const displayTitle = categoryTitles[category.name] || category.name;
-      const itemsHtml = categoryItems.map(generateItemHtml).join("");
+      const itemsHtml = categoryItems.map(generateItemHtml).join('');
 
       return `
         <section class="severo-category">
@@ -152,7 +173,7 @@ function generateMenuHtml(data: MenuTemplateData): string {
         </section>
       `;
     })
-    .join("");
+    .join('');
 
   // Generate uncategorized items HTML
   const uncategorizedHtml =
@@ -161,18 +182,26 @@ function generateMenuHtml(data: MenuTemplateData): string {
         <section class="severo-category">
           <h2 class="severo-category-title">Autres</h2>
           <ul class="severo-items-list">
-            ${uncategorizedItems.map(generateItemHtml).join("")}
+            ${uncategorizedItems.map(generateItemHtml).join('')}
           </ul>
         </section>
       `
-      : "";
+      : '';
 
   // Generate footer HTML
   const footerHtml = `
     <footer class="severo-footer">
-      ${info.holidayNotice ? `<p class="severo-footer-holiday">${escapeHtml(info.holidayNotice)}</p>` : ""}
-      ${info.meatOrigin ? `<p class="severo-footer-meat">${escapeHtml(info.meatOrigin)}</p>` : ""}
-      ${info.paymentNotice ? `<p class="severo-footer-payment">${escapeHtml(info.paymentNotice)}</p>` : ""}
+      ${
+        info.holidayNotice
+          ? `<p class="severo-footer-holiday">${escapeHtml(info.holidayNotice)}</p>`
+          : ''
+      }
+      ${info.meatOrigin ? `<p class="severo-footer-meat">${escapeHtml(info.meatOrigin)}</p>` : ''}
+      ${
+        info.paymentNotice
+          ? `<p class="severo-footer-payment">${escapeHtml(info.paymentNotice)}</p>`
+          : ''
+      }
     </footer>
   `;
 
@@ -196,7 +225,7 @@ function generateMenuHtml(data: MenuTemplateData): string {
 
       <div class="severo-header-info">
         <span class="severo-restaurant-name">${escapeHtml(restaurantName)}</span>
-        <span class="severo-opening">est ouvert ${escapeHtml(info.openingDays || "")}</span>
+        <span class="severo-opening">est ouvert ${escapeHtml(info.openingDays || '')}</span>
       </div>
 
       <div class="severo-header-date">
@@ -204,7 +233,7 @@ function generateMenuHtml(data: MenuTemplateData): string {
       </div>
 
       <div class="severo-header-hours">
-        Service ${escapeHtml(info.serviceHours || "")}
+        Service ${escapeHtml(info.serviceHours || '')}
       </div>
     </header>
 
@@ -226,11 +255,11 @@ function generateMenuHtml(data: MenuTemplateData): string {
  */
 function escapeHtml(text: string): string {
   return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**
@@ -435,30 +464,29 @@ function getSeveroStyles(): string {
 
 /**
  * Génère le PDF du menu
+ * Compatible Vercel Serverless avec @sparticuz/chromium
  */
-export async function generateMenuPdf(
-  data: MenuTemplateData
-): Promise<Buffer> {
+export async function generateMenuPdf(data: MenuTemplateData): Promise<Buffer> {
   const chromium = await getChromium();
   const puppeteer = await getPuppeteer();
 
   // Configuration pour Vercel (production) vs local (development)
-  const isProduction = process.env.NODE_ENV === "production";
+  const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL === '1';
 
   let executablePath: string;
+  let args: string[];
 
   if (isProduction) {
+    // Vercel serverless environment
     executablePath = await chromium.default.executablePath();
+    args = chromium.default.args;
   } else {
     // En développement, utiliser le Chrome local
-    // macOS
-    const macPath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-    // Linux
-    const linuxPath = "/usr/bin/google-chrome";
-    // Windows
-    const winPath = "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+    const macPath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    const linuxPath = '/usr/bin/google-chrome';
+    const winPath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 
-    const fs = await import("fs");
+    const fs = await import('fs');
     if (fs.existsSync(macPath)) {
       executablePath = macPath;
     } else if (fs.existsSync(linuxPath)) {
@@ -466,14 +494,13 @@ export async function generateMenuPdf(
     } else if (fs.existsSync(winPath)) {
       executablePath = winPath;
     } else {
-      throw new Error(
-        "Chrome non trouvé. Installez Chrome ou définissez CHROME_PATH."
-      );
+      throw new Error('Chrome non trouvé. Installez Chrome ou définissez CHROME_PATH.');
     }
+    args = ['--no-sandbox', '--disable-setuid-sandbox'];
   }
 
   const browser = await puppeteer.default.launch({
-    args: isProduction ? chromium.default.args : ["--no-sandbox"],
+    args,
     defaultViewport: { width: 1200, height: 800 },
     executablePath,
     headless: true,
@@ -482,24 +509,32 @@ export async function generateMenuPdf(
   try {
     const page = await browser.newPage();
 
+    // Set timeout for Vercel (45s max to leave room for response)
+    page.setDefaultTimeout(45000);
+
     // Generate HTML
     const html = generateMenuHtml(data);
 
-    // Set content
+    // Set content - use domcontentloaded for faster rendering (no external deps)
     await page.setContent(html, {
-      waitUntil: "networkidle0",
+      waitUntil: 'domcontentloaded',
+      timeout: 30000,
     });
+
+    // Small delay to ensure CSS is applied
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Generate PDF
     const pdfBuffer = await page.pdf({
-      format: "A4",
+      format: 'A4',
       printBackground: true,
       margin: {
-        top: "0",
-        right: "0",
-        bottom: "0",
-        left: "0",
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0',
       },
+      timeout: 30000,
     });
 
     return Buffer.from(pdfBuffer);
