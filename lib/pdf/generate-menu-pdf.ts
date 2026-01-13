@@ -2,7 +2,7 @@
  * PDF Generation Service - Style Le Severo
  *
  * Génère un PDF A4 du menu au style bistrot parisien.
- * Compatible avec Vercel (utilise @sparticuz/chromium en production).
+ * Compatible avec Vercel (utilise @sparticuz/chromium-min en production).
  */
 
 import type {
@@ -11,6 +11,10 @@ import type {
   RestaurantInfo,
 } from '@/components/menu/MenuPrintTemplate';
 
+// Chromium binary URL for serverless (hosted on GitHub releases)
+const CHROMIUM_PACK_URL =
+  'https://github.com/nicholaschiang/chromium/releases/download/v131.0.1/chromium-v131.0.1-pack.tar';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let chromiumModule: any = null;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,7 +22,7 @@ let puppeteerModule: any = null;
 
 async function getChromium() {
   if (!chromiumModule) {
-    chromiumModule = await import('@sparticuz/chromium');
+    chromiumModule = await import('@sparticuz/chromium-min');
   }
   return chromiumModule.default || chromiumModule;
 }
@@ -465,7 +469,7 @@ function getSeveroStyles(): string {
 
 /**
  * Génère le PDF du menu
- * Compatible Vercel Serverless avec @sparticuz/chromium
+ * Compatible Vercel Serverless avec @sparticuz/chromium-min
  */
 export async function generateMenuPdf(data: MenuTemplateData): Promise<Buffer> {
   const puppeteer = await getPuppeteer();
@@ -476,13 +480,16 @@ export async function generateMenuPdf(data: MenuTemplateData): Promise<Buffer> {
   let browser;
 
   if (isVercel) {
-    // Vercel serverless environment - use @sparticuz/chromium
+    // Vercel serverless environment - use @sparticuz/chromium-min
     const chromium = await getChromium();
+
+    // chromium-min downloads the binary from the URL at runtime
+    const executablePath = await chromium.executablePath();
 
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: { width: 1200, height: 800 },
-      executablePath: await chromium.executablePath(),
+      executablePath,
       headless: true,
     });
   } else {
