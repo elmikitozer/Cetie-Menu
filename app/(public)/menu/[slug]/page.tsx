@@ -2,6 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import type { Restaurant } from "@/lib/types/database";
+import {
+  MenuPrintTemplate,
+  type MenuTemplateData,
+} from "@/components/menu/MenuPrintTemplate";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -210,25 +214,46 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
   const dateDisplay = formatDateDisplay(selectedDate);
   const isTodayDate = isToday(selectedDate);
 
+  // Prepare template data for MenuPrintTemplate
+  const templateData: MenuTemplateData | null = hasMenu
+    ? {
+        restaurantName: restaurant.name,
+        date: selectedDate,
+        items: menuItems
+          .filter((item) => item.product)
+          .map((item) => ({
+            id: item.id,
+            name: item.product!.name,
+            description: item.product!.description,
+            price: item.custom_price ?? item.product!.price,
+            category_id: item.product!.category?.id || null,
+          })),
+        categories: sortedCategories
+          .map((name) => {
+            const firstItem = groupedItems[name][0];
+            return {
+              id: firstItem?.product?.category?.id || name,
+              name,
+              display_order: firstItem?.product?.category?.display_order ?? 99,
+            };
+          }),
+      }
+    : null;
+
   return (
-    <main className="min-h-screen bg-white dark:bg-gray-950">
-      {/* Header */}
-      <header className="text-center py-8 px-4 border-b border-gray-200 dark:border-gray-800">
-        <h1 className="text-3xl font-bold mb-2">{restaurant.name}</h1>
-        <p className="text-gray-600 dark:text-gray-400 capitalize">
-          Menu du {dateDisplay}
-        </p>
-        {dailyMenu && !dailyMenu.is_published && (
-          <p className="mt-2 text-sm text-amber-600 dark:text-amber-400 font-medium">
-            (Aperçu - Menu non publié)
-          </p>
-        )}
-      </header>
+    <main className="min-h-screen bg-gray-100 dark:bg-gray-950">
+      {/* Preview banner */}
+      {dailyMenu && !dailyMenu.is_published && (
+        <div className="bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-center py-2 text-sm font-medium">
+          Aperçu - Menu non publié
+        </div>
+      )}
 
       {/* Menu content */}
-      <div className="max-w-lg mx-auto p-6">
+      <div className="py-8 px-4">
         {!hasMenu ? (
-          <div className="text-center py-12">
+          <div className="max-w-lg mx-auto bg-white dark:bg-gray-900 rounded-xl p-8 text-center shadow-sm">
+            <h1 className="text-2xl font-bold mb-4">{restaurant.name}</h1>
             <p className="text-gray-600 dark:text-gray-400">
               {isTodayDate
                 ? "Aucun menu disponible pour aujourd'hui."
@@ -236,46 +261,12 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
             </p>
           </div>
         ) : (
-          <div className="space-y-8">
-            {sortedCategories.map((categoryName) => (
-              <section key={categoryName}>
-                <h2 className="text-lg font-semibold text-center uppercase tracking-wider text-gray-500 mb-4">
-                  {categoryName}
-                </h2>
-                <div className="space-y-4">
-                  {groupedItems[categoryName].map((item) => {
-                    if (!item.product) return null;
-                    const price = item.custom_price ?? item.product.price;
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex justify-between items-start"
-                      >
-                        <div className="flex-1 pr-4">
-                          <h3 className="font-medium">{item.product.name}</h3>
-                          {item.product.description && (
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                              {item.product.description}
-                            </p>
-                          )}
-                        </div>
-                        {price !== null && (
-                          <span className="font-medium whitespace-nowrap">
-                            {price.toFixed(2)}€
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            ))}
-          </div>
+          <MenuPrintTemplate data={templateData!} mode="screen" />
         )}
       </div>
 
       {/* Footer */}
-      <footer className="text-center py-6 px-4 border-t border-gray-200 dark:border-gray-800 text-sm text-gray-500">
+      <footer className="text-center py-6 px-4 text-sm text-gray-500">
         {restaurant.address && <p>{restaurant.address}</p>}
         {restaurant.phone && <p>{restaurant.phone}</p>}
       </footer>

@@ -7,6 +7,7 @@ import {
   getDailyMenu,
   saveDailyMenu,
   getRestaurantSlug,
+  updateMenuShowPrices,
   type ProductWithCategory,
 } from "@/app/actions/daily-menu";
 import {
@@ -33,6 +34,7 @@ export function MenuDuJour() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [restaurantSlug, setRestaurantSlug] = useState<string | null>(null);
+  const [showPrices, setShowPrices] = useState(true);
 
   // Group products by category
   const groupedProducts: GroupedProducts = {};
@@ -74,9 +76,11 @@ export function MenuDuJour() {
         orders[item.product_id] = item.display_order;
       });
       setProductOrders(orders);
+      setShowPrices(menuResult.menu.show_prices);
     } else {
       setSelectedIds(new Set());
       setProductOrders({});
+      setShowPrices(true);
     }
 
     setRestaurantSlug(slug);
@@ -138,7 +142,8 @@ export function MenuDuJour() {
     const result = await saveDailyMenu(
       selectedDate,
       Array.from(selectedIds),
-      productOrders
+      productOrders,
+      { showPrices }
     );
 
     if (result.error) {
@@ -150,9 +155,28 @@ export function MenuDuJour() {
     setSaving(false);
   };
 
+  const handleToggleShowPrices = async () => {
+    const newValue = !showPrices;
+    setShowPrices(newValue);
+
+    // Update immediately in DB if menu exists
+    const result = await updateMenuShowPrices(selectedDate, newValue);
+    if (result.error) {
+      // Revert on error
+      setShowPrices(!newValue);
+      toast.error(result.error, { duration: 5000 });
+    }
+  };
+
   const handlePreview = () => {
     if (restaurantSlug) {
       window.open(`/menu/${restaurantSlug}?date=${selectedDate}`, "_blank");
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    if (restaurantSlug) {
+      window.open(`/api/menu/pdf?slug=${restaurantSlug}&date=${selectedDate}`, "_blank");
     }
   };
 
@@ -210,8 +234,7 @@ export function MenuDuJour() {
                 onClick={goToToday}
                 className="ml-2 text-sm text-blue-600 hover:text-blue-700"
               >
-                (➡️ Menu du jour)
-
+                (Menu du jour)
               </button>
             )}
           </div>
@@ -224,6 +247,28 @@ export function MenuDuJour() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Show prices toggle */}
+      <div className="bg-white dark:bg-gray-900 rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="font-medium">Afficher les prix</p>
+            <p className="text-sm text-gray-500">Sur la carte publique et le PDF</p>
+          </div>
+          <button
+            onClick={handleToggleShowPrices}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              showPrices ? "bg-blue-600" : "bg-gray-300 dark:bg-gray-600"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                showPrices ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
           </button>
         </div>
       </div>
@@ -334,9 +379,23 @@ export function MenuDuJour() {
           <button
             onClick={handlePreview}
             disabled={!restaurantSlug}
-            className="flex-1 py-4 px-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+            className="py-4 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+            title="Aperçu"
           >
-            Aperçu
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+          </button>
+          <button
+            onClick={handleDownloadPdf}
+            disabled={!restaurantSlug || selectedIds.size === 0}
+            className="py-4 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50"
+            title="Télécharger PDF"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
           </button>
           <button
             onClick={handleSave}

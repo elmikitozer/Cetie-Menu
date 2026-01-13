@@ -1,0 +1,283 @@
+/**
+ * Menu Print Styles - Direction Artistique
+ *
+ * POUR MODIFIER LA DA DU MENU :
+ * Ce fichier contient tous les styles du template de menu.
+ * Modifiez les variables CSS ci-dessous pour changer rapidement l'apparence.
+ */
+
+/* ==========================================================================
+   VARIABLES DE DESIGN - Modifier ici pour changer la DA
+   ========================================================================== */
+
+.menu-print-container {
+  /* Couleurs */
+  --menu-bg: #ffffff;
+  --menu-text: #1a1a1a;
+  --menu-text-muted: #666666;
+  --menu-accent: #2563eb;
+  --menu-border: #e5e5e5;
+  --menu-divider-ornament: #c9a227;
+
+  /* Typographie */
+  --menu-font-family: "Georgia", "Times New Roman", serif;
+  --menu-font-family-sans: system-ui, -apple-system, sans-serif;
+
+  /* Espacements */
+  --menu-padding: 40px;
+  --menu-section-gap: 32px;
+  --menu-item-gap: 16px;
+}
+
+/* ==========================================================================
+   STRUCTURE DE BASE
+   ========================================================================== */
+
+.menu-print-container {
+  background: var(--menu-bg);
+  color: var(--menu-text);
+  font-family: var(--menu-font-family);
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--menu-padding);
+  min-height: 100%;
+}
+
+/* Mode print : occupe toute la page A4 */
+.menu-print-mode-print {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm 25mm;
+  margin: 0;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+/* ==========================================================================
+   HEADER
+   ========================================================================== */
+
+.menu-print-header {
+  text-align: center;
+  margin-bottom: var(--menu-section-gap);
+}
+
+.menu-print-restaurant-name {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.02em;
+  color: var(--menu-text);
+}
+
+.menu-print-title {
+  font-size: 1.25rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--menu-accent);
+  margin-bottom: 8px;
+}
+
+.menu-print-date {
+  font-size: 1rem;
+  color: var(--menu-text-muted);
+  font-style: italic;
+}
+
+/* ==========================================================================
+   DIVIDER DECORATIF
+   ========================================================================== */
+
+.menu-print-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: var(--menu-section-gap) 0;
+}
+
+.menu-print-divider::before,
+.menu-print-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--menu-border),
+    transparent
+  );
+  max-width: 150px;
+}
+
+.menu-print-divider-ornament {
+  padding: 0 16px;
+  color: var(--menu-divider-ornament);
+  font-size: 1.25rem;
+}
+
+/* ==========================================================================
+   CONTENU DU MENU
+   ========================================================================== */
+
+.menu-print-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--menu-section-gap);
+}
+
+/* ==========================================================================
+   CATEGORIES
+   ========================================================================== */
+
+.menu-print-category {
+  margin: 0;
+}
+
+.menu-print-category-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 var(--menu-item-gap) 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--menu-accent);
+  color: var(--menu-text);
+  text-transform: capitalize;
+}
+
+/* ==========================================================================
+   ITEMS DU MENU
+   ========================================================================== */
+
+.menu-print-items {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--menu-item-gap);
+}
+
+.menu-print-item {
+  padding: 0;
+}
+
+.menu-print-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.menu-print-item-name {
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--menu-text);
+  flex: 1;
+}
+
+/* Ligne pointillée entre le nom et le prix */
+.menu-print-item-header::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px dotted var(--menu-border);
+  margin: 0 8px;
+  min-width: 20px;
+}
+
+.menu-print-item-price {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--menu-text);
+  white-space: nowrap;
+  font-family: var(--menu-font-family-sans);
+}
+
+.menu-print-item-description {
+  font-size: 0.9rem;
+  color: var(--menu-text-muted);
+  margin: 4px 0 0 0;
+  font-style: italic;
+  line-height: 1.4;
+}
+
+/* ==========================================================================
+   MODE SANS PRIX
+   ========================================================================== */
+
+/* Supprimer la ligne pointillée quand pas de prix */
+.menu-print-item-header-no-price::after {
+  display: none;
+}
+
+/* Ajuster l'espacement quand pas de prix */
+.menu-print-items-no-price .menu-print-item-header {
+  justify-content: flex-start;
+}
+
+/* ==========================================================================
+   FOOTER
+   ========================================================================== */
+
+.menu-print-footer {
+  margin-top: auto;
+  padding-top: var(--menu-section-gap);
+  text-align: center;
+}
+
+.menu-print-footer-text {
+  font-size: 1.125rem;
+  font-style: italic;
+  color: var(--menu-text-muted);
+  margin: 0;
+}
+
+/* ==========================================================================
+   RESPONSIVE - Mode écran (non-print)
+   ========================================================================== */
+
+.menu-print-mode-screen {
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 640px) {
+  .menu-print-mode-screen {
+    padding: 24px 20px;
+  }
+
+  .menu-print-mode-screen .menu-print-restaurant-name {
+    font-size: 1.75rem;
+  }
+
+  .menu-print-mode-screen .menu-print-category-title {
+    font-size: 1.25rem;
+  }
+
+  .menu-print-mode-screen .menu-print-item-name {
+    font-size: 1rem;
+  }
+}
+
+/* ==========================================================================
+   STYLES D'IMPRESSION NAVIGATEUR (Ctrl+P)
+   ========================================================================== */
+
+@media print {
+  .menu-print-container {
+    width: 100%;
+    min-height: auto;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .menu-print-category {
+    break-inside: avoid;
+  }
+
+  .menu-print-item {
+    break-inside: avoid;
+  }
+}
