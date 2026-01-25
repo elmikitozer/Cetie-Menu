@@ -1,56 +1,52 @@
 /**
  * Menu Print Styles - Direction Artistique Le Severo
  *
- * Style épuré et classique de bistrot parisien:
- * - Typographie serif élégante
- * - Mise en page simple et lisible
- * - Prix alignés à droite
- * - Header informatif, footer avec mentions légales
+ * Reproduction exacte du PDF Severo:
+ * - Header 3 colonnes
+ * - Logo S stylisé
+ * - Titres de catégories centrés et soulignés
+ * - Prix alignés à droite format XX.XX
+ * - Footer avec notice congés en rouge/typewriter
  */
 
 /* ==========================================================================
-   VARIABLES DE DESIGN - Style Le Severo
+   RESET & BASE
    ========================================================================== */
 
 .severo-menu-container {
   /* Couleurs */
   --severo-bg: #ffffff;
-  --severo-text: #1a1a1a;
-  --severo-text-muted: #4a4a4a;
-  --severo-text-light: #6a6a6a;
-  --severo-border: #cccccc;
-  --severo-accent: #2c2c2c;
+  --severo-text: #000000;
+  --severo-text-muted: #333333;
+  --severo-text-light: #555555;
+  --severo-red: #c00000;
 
-  /* Typographie */
-  --severo-font-serif: "Times New Roman", "Georgia", serif;
-  --severo-font-sans: "Helvetica Neue", "Arial", sans-serif;
+  /* Typographie - Times New Roman obligatoire */
+  --severo-font-main: "Times New Roman", Times, serif;
+  --severo-font-mono: "Courier New", Courier, monospace;
 
   /* Espacements */
-  --severo-section-gap: 20px;
-  --severo-item-gap: 6px;
+  --severo-section-gap: 24px;
+  --severo-item-gap: 8px;
 }
-
-/* ==========================================================================
-   STRUCTURE DE BASE
-   ========================================================================== */
 
 .severo-menu-container {
   background: var(--severo-bg);
   color: var(--severo-text);
-  font-family: var(--severo-font-serif);
+  font-family: var(--severo-font-main);
   max-width: 800px;
   margin: 0 auto;
-  padding: 32px 40px;
+  padding: 24px 32px;
   min-height: 100%;
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
-/* Mode print : occupe toute la page A4 */
+/* Mode print : A4 */
 .severo-menu-mode-print {
   width: 210mm;
   min-height: 297mm;
-  padding: 15mm 20mm;
+  padding: 12mm 18mm;
   margin: 0;
   max-width: none;
   box-sizing: border-box;
@@ -59,56 +55,80 @@
 }
 
 /* ==========================================================================
-   HEADER - Style Severo
+   HEADER - 3 colonnes style Severo
    ========================================================================== */
 
 .severo-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 16px;
+  margin-bottom: 20px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.severo-header-col-left {
+  text-align: left;
+}
+
+.severo-header-col-center {
   text-align: center;
-  margin-bottom: var(--severo-section-gap);
-  border-bottom: 1px solid var(--severo-border);
-  padding-bottom: 16px;
 }
 
-.severo-header-top {
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  color: var(--severo-text-muted);
-  margin-bottom: 12px;
+.severo-header-col-right {
+  text-align: right;
 }
 
-.severo-header-left,
-.severo-header-right {
-  font-style: italic;
+.severo-header-line {
+  margin: 0;
+  padding: 0;
 }
 
-.severo-header-info {
-  margin-bottom: 8px;
-}
-
-.severo-restaurant-name {
-  font-size: 20px;
+.severo-header-line-bold {
   font-weight: 700;
-  letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   LOGO SECTION - Image du logo Severo
+   ========================================================================== */
+
+.severo-logo-section {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.severo-logo-image {
+  max-width: 280px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.severo-logo-subtitle-section {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.severo-logo-subtitle {
+  font-size: 9px;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
+  margin: 0;
+  font-weight: 400;
 }
 
-.severo-opening {
-  font-size: 13px;
-  color: var(--severo-text-muted);
-  margin-left: 8px;
+.severo-logo-type {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  margin: 3px 0;
 }
 
-.severo-header-date {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.severo-header-hours {
-  font-size: 12px;
-  color: var(--severo-text-muted);
-  letter-spacing: 0.1em;
+.severo-logo-cities {
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  font-weight: 700;
+  margin-top: 3px;
 }
 
 /* ==========================================================================
@@ -118,25 +138,20 @@
 .severo-boisson-section {
   text-align: center;
   margin-bottom: var(--severo-section-gap);
-  padding: 12px 0;
-  border-bottom: 1px solid var(--severo-border);
 }
 
 .severo-boisson-item {
-  display: flex;
-  justify-content: center;
-  align-items: baseline;
-  gap: 24px;
+  display: inline;
 }
 
 .severo-boisson-name {
   font-size: 13px;
-  font-style: italic;
 }
 
 .severo-boisson-price {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
+  margin-left: 8px;
 }
 
 /* ==========================================================================
@@ -151,7 +166,7 @@
 }
 
 /* ==========================================================================
-   CATEGORIES
+   CATEGORIES - Titres centrés et soulignés
    ========================================================================== */
 
 .severo-category {
@@ -159,18 +174,19 @@
 }
 
 .severo-category-title {
-  font-size: 16px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  margin: 0 0 10px 0;
-  padding-bottom: 4px;
-  border-bottom: 2px solid var(--severo-accent);
-  color: var(--severo-text);
+  font-size: 14px;
+  font-weight: 400;
+  text-transform: capitalize;
+  letter-spacing: 0.02em;
+  margin: 0 0 12px 0;
+  padding-bottom: 2px;
+  text-align: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* ==========================================================================
-   ITEMS LIST
+   ITEMS LIST - Style Severo
    ========================================================================== */
 
 .severo-items-list {
@@ -186,60 +202,57 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 12px;
-  padding: 2px 0;
+  gap: 16px;
+  padding: 0;
 }
 
 .severo-item-name {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--severo-text);
   flex: 1;
 }
 
 .severo-item-price {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
   color: var(--severo-text);
   white-space: nowrap;
-  min-width: 60px;
+  min-width: 50px;
   text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ==========================================================================
-   FOOTER - Mentions légales style Severo
+   FOOTER - Style Severo
    ========================================================================== */
 
 .severo-footer {
   margin-top: auto;
-  padding-top: var(--severo-section-gap);
-  border-top: 1px solid var(--severo-border);
-  font-size: 10px;
-  color: var(--severo-text-light);
-  line-height: 1.5;
-}
-
-.severo-footer p {
-  margin: 0 0 8px 0;
-}
-
-.severo-footer p:last-child {
-  margin-bottom: 0;
+  padding-top: 24px;
+  text-align: center;
 }
 
 .severo-footer-holiday {
-  font-weight: 600;
-  font-style: italic;
-  text-align: center;
-  font-size: 11px;
-  color: var(--severo-text-muted);
+  font-family: var(--severo-font-mono);
+  font-size: 12px;
+  color: var(--severo-red);
+  margin: 0 0 24px 0;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.severo-footer-legal {
+  font-size: 9px;
+  color: var(--severo-text);
+  line-height: 1.4;
+  margin: 0;
 }
 
 .severo-footer-meat {
-  font-style: italic;
+  margin-bottom: 4px;
 }
 
 .severo-footer-payment {
-  font-size: 9px;
+  /* No extra margin */
 }
 
 /* ==========================================================================
@@ -250,37 +263,36 @@
   border-radius: 8px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   border: 1px solid #e5e5e5;
+  background: white;
 }
 
 @media (max-width: 640px) {
   .severo-menu-mode-screen {
-    padding: 20px 16px;
+    padding: 16px;
     margin: 0 8px;
   }
 
-  .severo-menu-mode-screen .severo-restaurant-name {
-    font-size: 16px;
+  .severo-menu-mode-screen .severo-header {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
   }
 
-  .severo-menu-mode-screen .severo-opening {
-    display: block;
-    margin-left: 0;
-    margin-top: 4px;
+  .severo-menu-mode-screen .severo-header-col-left,
+  .severo-menu-mode-screen .severo-header-col-right {
+    text-align: center;
   }
 
-  .severo-menu-mode-screen .severo-header-top {
-    flex-direction: column;
-    gap: 4px;
-    align-items: center;
+  .severo-menu-mode-screen .severo-logo-s {
+    font-size: 48px;
   }
 
-  .severo-menu-mode-screen .severo-category-title {
-    font-size: 14px;
+  .severo-menu-mode-screen .severo-logo-name {
+    font-size: 20px;
   }
 
-  .severo-menu-mode-screen .severo-item-name,
-  .severo-menu-mode-screen .severo-item-price {
-    font-size: 13px;
+  .severo-menu-mode-screen .severo-logo-text {
+    padding-top: 10px;
   }
 }
 
@@ -306,21 +318,41 @@
   .severo-item {
     break-inside: avoid;
   }
-}
 
-/* ==========================================================================
-   DARK MODE SUPPORT (écran uniquement)
-   ========================================================================== */
-
-@media (prefers-color-scheme: dark) {
-  .severo-menu-mode-screen {
-    --severo-bg: #1a1a1a;
-    --severo-text: #f5f5f5;
-    --severo-text-muted: #b0b0b0;
-    --severo-text-light: #888888;
-    --severo-border: #404040;
-    --severo-accent: #e0e0e0;
-    border-color: #333;
+  .severo-footer {
+    break-inside: avoid;
   }
 }
 
+/* ==========================================================================
+   HIDE PRICES MODE
+   ========================================================================== */
+
+.severo-no-prices .severo-item-price,
+.severo-no-prices .severo-boisson-price {
+  display: none;
+}
+
+.severo-no-prices .severo-item {
+  justify-content: flex-start;
+}
+
+/* ==========================================================================
+   NO DARK MODE FOR PRINT TEMPLATE
+   ========================================================================== */
+
+.severo-menu-mode-print {
+  color-scheme: light only;
+}
+
+/* Screen mode dark theme support */
+@media (prefers-color-scheme: dark) {
+  .severo-menu-mode-screen {
+    background: #1a1a1a;
+    color: #f0f0f0;
+    border-color: #333;
+    --severo-text: #f0f0f0;
+    --severo-text-muted: #cccccc;
+    --severo-text-light: #999999;
+  }
+}
