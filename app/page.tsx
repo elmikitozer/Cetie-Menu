@@ -15,12 +15,6 @@ export default function HomePage() {
           >
             Se connecter
           </Link>
-          <Link
-            href="/signup"
-            className="px-6 py-3 border border-gray-300 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
-          >
-            Créer un compte
-          </Link>
         </div>
       </div>
     </main>

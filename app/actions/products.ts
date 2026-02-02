@@ -23,6 +23,24 @@ async function getRestaurantId(): Promise<string | null> {
   return (data as { restaurant_id: string | null } | null)?.restaurant_id ?? null;
 }
 
+async function getUserRole(): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from("users")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  return (data as { role?: string } | null)?.role ?? null;
+}
+
 export type ProductInput = {
   name: string;
   categoryId: string;
@@ -33,9 +51,13 @@ export type ProductInput = {
 export async function addProduct(input: ProductInput) {
   const supabase = await createClient();
   const restaurantId = await getRestaurantId();
+  const role = await getUserRole();
 
   if (!restaurantId) {
     return { error: "Non authentifié" };
+  }
+  if (role === "staff") {
+    return { error: "Non autorisé" };
   }
 
   if (!input.name.trim()) {
@@ -79,9 +101,13 @@ export async function updateProduct(
 ) {
   const supabase = await createClient();
   const restaurantId = await getRestaurantId();
+  const role = await getUserRole();
 
   if (!restaurantId) {
     return { error: "Non authentifié" };
+  }
+  if (role === "staff") {
+    return { error: "Non autorisé" };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -127,9 +153,13 @@ export async function updateProduct(
 export async function deleteProduct(productId: string) {
   const supabase = await createClient();
   const restaurantId = await getRestaurantId();
+  const role = await getUserRole();
 
   if (!restaurantId) {
     return { error: "Non authentifié" };
+  }
+  if (role === "staff") {
+    return { error: "Non autorisé" };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -169,9 +199,13 @@ export async function deleteProduct(productId: string) {
 export async function toggleProductActive(productId: string, isActive: boolean) {
   const supabase = await createClient();
   const restaurantId = await getRestaurantId();
+  const role = await getUserRole();
 
   if (!restaurantId) {
     return { error: "Non authentifié" };
+  }
+  if (role === "staff") {
+    return { error: "Non autorisé" };
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

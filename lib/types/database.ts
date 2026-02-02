@@ -17,6 +17,18 @@ export interface Database {
           logo_url: string | null;
           address: string | null;
           phone: string | null;
+          // PDF Design fields
+          opening_days: string | null;
+          opening_days_2: string | null;
+          lunch_hours: string | null;
+          dinner_hours: string | null;
+          holiday_notice: string | null;
+          meat_origin: string | null;
+          payment_notice: string | null;
+          subtitle: string | null;
+          restaurant_type: string | null;
+          cities: string | null;
+          sides_note: string | null;
           created_at: string;
         };
         Insert: {
@@ -26,6 +38,17 @@ export interface Database {
           logo_url?: string | null;
           address?: string | null;
           phone?: string | null;
+          opening_days?: string | null;
+          opening_days_2?: string | null;
+          lunch_hours?: string | null;
+          dinner_hours?: string | null;
+          holiday_notice?: string | null;
+          meat_origin?: string | null;
+          payment_notice?: string | null;
+          subtitle?: string | null;
+          restaurant_type?: string | null;
+          cities?: string | null;
+          sides_note?: string | null;
           created_at?: string;
         };
         Update: {
@@ -35,6 +58,17 @@ export interface Database {
           logo_url?: string | null;
           address?: string | null;
           phone?: string | null;
+          opening_days?: string | null;
+          opening_days_2?: string | null;
+          lunch_hours?: string | null;
+          dinner_hours?: string | null;
+          holiday_notice?: string | null;
+          meat_origin?: string | null;
+          payment_notice?: string | null;
+          subtitle?: string | null;
+          restaurant_type?: string | null;
+          cities?: string | null;
+          sides_note?: string | null;
           created_at?: string;
         };
       };
@@ -44,7 +78,7 @@ export interface Database {
           email: string;
           full_name: string | null;
           restaurant_id: string | null;
-          role: string;
+          role: "owner" | "staff" | "admin";
           created_at: string;
         };
         Insert: {
@@ -52,7 +86,7 @@ export interface Database {
           email: string;
           full_name?: string | null;
           restaurant_id?: string | null;
-          role?: string;
+          role?: "owner" | "staff" | "admin";
           created_at?: string;
         };
         Update: {
@@ -60,7 +94,7 @@ export interface Database {
           email?: string;
           full_name?: string | null;
           restaurant_id?: string | null;
-          role?: string;
+          role?: "owner" | "staff" | "admin";
           created_at?: string;
         };
       };
@@ -174,6 +208,44 @@ export interface Database {
           created_at?: string;
         };
       };
+      invites: {
+        Row: {
+          id: string;
+          restaurant_id: string;
+          token: string;
+          role: "owner" | "staff";
+          email: string | null;
+          created_by: string | null;
+          used_by: string | null;
+          created_at: string;
+          expires_at: string | null;
+          used_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          restaurant_id: string;
+          token?: string;
+          role: "owner" | "staff";
+          email?: string | null;
+          created_by?: string | null;
+          used_by?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+          used_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          restaurant_id?: string;
+          token?: string;
+          role?: "owner" | "staff";
+          email?: string | null;
+          created_by?: string | null;
+          used_by?: string | null;
+          created_at?: string;
+          expires_at?: string | null;
+          used_at?: string | null;
+        };
+      };
     };
     Views: {
       [_ in never]: never;
@@ -194,3 +266,6 @@ export type Category = Database["public"]["Tables"]["categories"]["Row"];
 export type Product = Database["public"]["Tables"]["products"]["Row"];
 export type DailyMenu = Database["public"]["Tables"]["daily_menus"]["Row"];
 export type DailyMenuItem = Database["public"]["Tables"]["daily_menu_items"]["Row"];
+
+// Role type
+export type UserRole = "owner" | "staff" | "admin";

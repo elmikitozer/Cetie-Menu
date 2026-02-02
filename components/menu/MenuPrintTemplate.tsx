@@ -30,7 +30,8 @@ export type MenuItem = {
 };
 
 export type RestaurantInfo = {
-  openingDays?: string; // e.g., "du lundi au vendredi"
+  openingDays?: string; // e.g., "Carafe d'eau gratuite" (left col line 1)
+  openingDays2?: string; // e.g., "Service compris 15%" (left col line 2)
   lunchHours?: string; // e.g., "12h-14h"
   dinnerHours?: string; // e.g., "19h30-21h30"
   holidayNotice?: string; // e.g., "Le Severo sera fermé pour les\ncongés d'hiver du 24/12 au 4/01"
@@ -39,10 +40,12 @@ export type RestaurantInfo = {
   subtitle?: string; // e.g., "RESTAURANT"
   type?: string; // e.g., "- BOUCHER -"
   cities?: string; // e.g., "PARIS • TOKYO"
+  sidesNote?: string; // e.g., "* Accompagnements au choix"
 };
 
 export type MenuTemplateData = {
   restaurantName: string;
+  logoUrl?: string | null; // URL du logo du restaurant (Supabase Storage ou public)
   date: string; // Format: YYYY-MM-DD
   items: MenuItem[];
   categories: MenuCategory[];
@@ -59,13 +62,17 @@ interface MenuPrintTemplateProps {
 function formatDateSevero(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
   const day = date.getDate();
-  const monthNames = [
-    "janv.", "févr.", "mars", "avr.", "mai", "juin",
-    "juil.", "août", "sept.", "oct.", "nov.", "déc."
+  const dayNames = [
+    "dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"
   ];
+  const monthNames = [
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre"
+  ];
+  const dayName = dayNames[date.getDay()];
   const month = monthNames[date.getMonth()];
   const year = date.getFullYear().toString().slice(-2);
-  return `${day}-${month}-${year}`;
+  return `${dayName} ${day} ${month} ${year}`;
 }
 
 function formatPrice(price: number, priceUnit: PriceUnit = "FIXED"): string {
@@ -83,6 +90,7 @@ export function MenuPrintTemplate({
 }: MenuPrintTemplateProps) {
   const {
     restaurantName,
+    logoUrl,
     date,
     items,
     categories,
@@ -90,21 +98,23 @@ export function MenuPrintTemplate({
     restaurantInfo,
   } = data;
 
-  // Default restaurant info (Le Severo style)
+  // Default restaurant info (use empty strings for optional fields)
   const info: RestaurantInfo = {
-    openingDays: restaurantInfo?.openingDays ?? "du lundi au vendredi",
-    lunchHours: restaurantInfo?.lunchHours ?? "12h-14h",
-    dinnerHours: restaurantInfo?.dinnerHours ?? "19h30-21h30",
-    holidayNotice: restaurantInfo?.holidayNotice ?? "",
-    meatOrigin: restaurantInfo?.meatOrigin ?? "Le boeuf est d'origine allemande ou française le veau est hollandais.",
-    paymentNotice: restaurantInfo?.paymentNotice ?? "Devant la recrudescence des chèques impayés, nous vous prions de régler par Carte Bleue, espèces ou tickets restaurant (article 40 décret 92-456 du 22/05/92)",
-    subtitle: restaurantInfo?.subtitle ?? "RESTAURANT",
-    type: restaurantInfo?.type ?? "- BOUCHER -",
-    cities: restaurantInfo?.cities ?? "PARIS • TOKYO",
+    openingDays: restaurantInfo?.openingDays || "",
+    openingDays2: restaurantInfo?.openingDays2 || "",
+    lunchHours: restaurantInfo?.lunchHours || "",
+    dinnerHours: restaurantInfo?.dinnerHours || "",
+    holidayNotice: restaurantInfo?.holidayNotice || "",
+    meatOrigin: restaurantInfo?.meatOrigin || "",
+    paymentNotice: restaurantInfo?.paymentNotice || "",
+    subtitle: restaurantInfo?.subtitle || "",
+    type: restaurantInfo?.type || "",
+    cities: restaurantInfo?.cities || "",
+    sidesNote: restaurantInfo?.sidesNote || "",
   };
 
-  // Logo image path (in public folder)
-  const logoPath = "/logo-severo.png";
+  // Logo image path - utilise le logo du restaurant ou fallback sur le logo par défaut
+  const logoPath = logoUrl || "/logo-severo.png";
 
   // Group items by category
   const itemsByCategory: Record<string, MenuItem[]> = {};
@@ -161,12 +171,15 @@ export function MenuPrintTemplate({
           <p className="severo-header-line">Service compris 15%</p>
         </div>
         <div className="severo-header-col-center">
-          <p className="severo-header-line">{restaurantName} est ouvert {info.openingDays}</p>
-          <p className="severo-header-line">Aujourd&apos;hui {formattedDate}</p>
+          <p className="severo-header-line">
+            <strong>{restaurantName}</strong>{info.openingDays ? ` est ouvert ${info.openingDays}` : ""}
+          </p>
+          {info.openingDays2 && <p className="severo-header-line">{info.openingDays2}</p>}
+          <p className="severo-header-line">{formattedDate}</p>
         </div>
         <div className="severo-header-col-right">
-          <p className="severo-header-line severo-header-line-bold">Service {info.lunchHours}</p>
-          <p className="severo-header-line severo-header-line-bold">{info.dinnerHours}</p>
+          {info.lunchHours && <p className="severo-header-line severo-header-line-bold">Service {info.lunchHours}</p>}
+          {info.dinnerHours && <p className="severo-header-line severo-header-line-bold">{info.dinnerHours}</p>}
         </div>
       </header>
 
@@ -178,11 +191,13 @@ export function MenuPrintTemplate({
           alt={restaurantName}
           className="severo-logo-image"
         />
-        <div className="severo-logo-subtitle-section">
-          <p className="severo-logo-subtitle">{info.subtitle}</p>
-          <p className="severo-logo-type">{info.type}</p>
-          <p className="severo-logo-cities">{info.cities}</p>
-        </div>
+        {(info.subtitle || info.type || info.cities) && (
+          <div className="severo-logo-subtitle-section">
+            {info.subtitle && <p className="severo-logo-subtitle">{info.subtitle}</p>}
+            {info.type && <p className="severo-logo-type">{info.type}</p>}
+            {info.cities && <p className="severo-logo-cities">{info.cities}</p>}
+          </div>
+        )}
       </div>
 
       {/* Boisson section (champagne) - centered single line */}
@@ -208,6 +223,7 @@ export function MenuPrintTemplate({
           if (!categoryItems || categoryItems.length === 0) return null;
 
           const displayTitle = getCategoryTitle(category.name);
+          const isPlatsCategory = category.name.toLowerCase() === "plat" || category.name.toLowerCase() === "plats";
 
           return (
             <section key={category.id} className="severo-category">
@@ -224,6 +240,9 @@ export function MenuPrintTemplate({
                   </li>
                 ))}
               </ul>
+              {isPlatsCategory && info.sidesNote && (
+                <p className="severo-sides-note">{info.sidesNote}</p>
+              )}
             </section>
           );
         })}
@@ -248,20 +267,24 @@ export function MenuPrintTemplate({
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="severo-footer">
-        {info.holidayNotice && (
-          <p className="severo-footer-holiday">{info.holidayNotice}</p>
-        )}
-        <div className="severo-footer-legal">
-          {info.meatOrigin && (
-            <p className="severo-footer-meat">{info.meatOrigin}</p>
+      {/* Footer - only show if there's content */}
+      {(info.holidayNotice || info.meatOrigin || info.paymentNotice) && (
+        <footer className="severo-footer">
+          {info.holidayNotice && (
+            <p className="severo-footer-holiday">{info.holidayNotice}</p>
           )}
-          {info.paymentNotice && (
-            <p className="severo-footer-payment">{info.paymentNotice}</p>
+          {(info.meatOrigin || info.paymentNotice) && (
+            <div className="severo-footer-legal">
+              {info.meatOrigin && (
+                <p className="severo-footer-meat">{info.meatOrigin}</p>
+              )}
+              {info.paymentNotice && (
+                <p className="severo-footer-payment">{info.paymentNotice}</p>
+              )}
+            </div>
           )}
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }

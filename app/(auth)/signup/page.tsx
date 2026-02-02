@@ -1,19 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function SignupPage() {
+function SignupForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [restaurantName, setRestaurantName] = useState("");
+  const searchParams = useSearchParams();
+  const inviteFromUrl = searchParams.get("invite") || "";
+  const [inviteToken, setInviteToken] = useState(inviteFromUrl);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  useEffect(() => {
+    if (inviteFromUrl && inviteFromUrl !== inviteToken) {
+      setInviteToken(inviteFromUrl);
+    }
+  }, [inviteFromUrl, inviteToken]);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +31,13 @@ export default function SignupPage() {
     // Use NEXT_PUBLIC_SITE_URL for production, fallback to window.location.origin
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
 
+    const trimmedInvite = inviteToken.trim();
+    if (!trimmedInvite) {
+      setError("Un code d'invitation est requis.");
+      setLoading(false);
+      return;
+    }
+
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -30,7 +45,7 @@ export default function SignupPage() {
       options: {
         emailRedirectTo: `${siteUrl}/callback`,
         data: {
-          restaurant_name: restaurantName,
+          invite_token: trimmedInvite,
         },
       },
     });
@@ -58,10 +73,9 @@ export default function SignupPage() {
       <main className="flex min-h-screen flex-col items-center justify-center p-6">
         <div className="w-full max-w-sm space-y-6 text-center">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold">Vérifiez votre email</h1>
+            <h1 className="text-2xl font-bold">Compte créé</h1>
             <p className="text-gray-600 dark:text-gray-400">
-              Nous avons envoyé un lien de confirmation à{" "}
-              <strong>{email}</strong>
+              Vous pouvez maintenant vous connecter.
             </p>
           </div>
           <Link
@@ -81,21 +95,21 @@ export default function SignupPage() {
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold">Créer un compte</h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Commencez à créer vos menus du jour
+            Inscription sur invitation uniquement
           </p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="restaurant" className="text-sm font-medium">
-              Nom du restaurant
+            <label htmlFor="invite" className="text-sm font-medium">
+              Code d&apos;invitation
             </label>
             <input
-              id="restaurant"
+              id="invite"
               type="text"
-              value={restaurantName}
-              onChange={(e) => setRestaurantName(e.target.value)}
-              placeholder="Chez Marcel"
+              value={inviteToken}
+              onChange={(e) => setInviteToken(e.target.value)}
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
               required
               className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -154,5 +168,13 @@ export default function SignupPage() {
         </p>
       </div>
     </main>
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" />}>
+      <SignupForm />
+    </Suspense>
   );
 }

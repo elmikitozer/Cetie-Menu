@@ -99,14 +99,14 @@
 }
 
 .severo-logo-image {
-  max-width: 280px;
+  max-width: 320px;
   height: auto;
   display: block;
   margin: 0 auto;
 }
 
 .severo-logo-subtitle-section {
-  margin-top: 8px;
+  margin-top: 28px;
   text-align: center;
 }
 
@@ -219,6 +219,18 @@
   min-width: 50px;
   text-align: right;
   font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   SIDES NOTE - Mention accompagnements
+   ========================================================================== */
+
+.severo-sides-note {
+  font-size: 11px;
+  font-style: italic;
+  text-align: right;
+  margin: 8px 0 0 0;
+  color: var(--severo-text-muted);
 }
 
 /* ==========================================================================

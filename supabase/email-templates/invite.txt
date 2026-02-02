@@ -1,0 +1,10 @@
+Vous etes invite(e) sur Carte du Jour
+
+Bonjour,
+
+Vous avez recu une invitation pour acceder a votre espace restaurant.
+Cliquez sur le lien ci-dessous pour creer votre mot de passe et activer votre compte:
+
+{{ .ConfirmationURL }}
+
+Si vous n'etes pas concerne, vous pouvez ignorer cet email.

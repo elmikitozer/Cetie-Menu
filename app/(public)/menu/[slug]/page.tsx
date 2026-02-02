@@ -224,6 +224,7 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
   const templateData: MenuTemplateData | null = hasMenu
     ? {
         restaurantName: restaurant.name,
+        logoUrl: restaurant.logo_url,
         date: selectedDate,
         items: menuItems
           .filter((item) => item.product)
@@ -245,6 +246,20 @@ export default async function PublicMenuPage({ params, searchParams }: Props) {
             };
           }),
         showPrices: dailyMenu.show_prices ?? true,
+        // PDF Design fields from restaurant
+        restaurantInfo: {
+          openingDays: restaurant.opening_days || undefined,
+          openingDays2: restaurant.opening_days_2 || undefined,
+          lunchHours: restaurant.lunch_hours || undefined,
+          dinnerHours: restaurant.dinner_hours || undefined,
+          holidayNotice: restaurant.holiday_notice || undefined,
+          meatOrigin: restaurant.meat_origin || undefined,
+          paymentNotice: restaurant.payment_notice || undefined,
+          subtitle: restaurant.subtitle || undefined,
+          type: restaurant.restaurant_type || undefined,
+          cities: restaurant.cities || undefined,
+          sidesNote: restaurant.sides_note || undefined,
+        },
       }
     : null;
 
