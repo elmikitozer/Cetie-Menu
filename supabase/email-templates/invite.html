@@ -12,12 +12,12 @@
           <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="background:#ffffff;border-radius:12px;overflow:hidden;">
             <tr>
               <td style="padding:28px 32px 8px 32px;">
-                <h1 style="margin:0;font-size:22px;">Vous etes invite(e) sur Carte du Jour</h1>
+                <h1 style="margin:0;font-size:22px;">Vous etes invite(e) sur {{ .Data.restaurant_name }}</h1>
                 <p style="margin:12px 0 0 0;color:#555;line-height:1.5;">
                   Bonjour,
                 </p>
                 <p style="margin:8px 0 0 0;color:#555;line-height:1.5;">
-                  Vous avez recu une invitation pour acceder a votre espace restaurant.
+                  Vous avez recu une invitation pour acceder a l'espace de {{ .Data.restaurant_name }}.
                   Cliquez sur le bouton ci-dessous pour creer votre mot de passe et activer votre compte.
                 </p>
               </td>

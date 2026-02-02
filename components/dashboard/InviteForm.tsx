@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { createInvite } from "@/app/actions/invites";
+import { createInvite, sendInviteEmail } from "@/app/actions/invites";
 
 type InviteFormProps = {
   restaurantId: string | null;
@@ -9,11 +9,14 @@ type InviteFormProps = {
 };
 
 export function InviteForm({ restaurantId, isOwner }: InviteFormProps) {
+  const invitesEmailEnabled = process.env.NEXT_PUBLIC_INVITES_EMAIL_ENABLED === "true";
   const [role, setRole] = useState<"owner" | "staff">("staff");
   const [email, setEmail] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const baseUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
@@ -25,6 +28,7 @@ export function InviteForm({ restaurantId, isOwner }: InviteFormProps) {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setNotice(null);
     setToken(null);
     setLoading(true);
 
@@ -41,7 +45,36 @@ export function InviteForm({ restaurantId, isOwner }: InviteFormProps) {
     }
 
     setToken(result.token ?? null);
+    setNotice("Lien généré.");
     setLoading(false);
+  };
+
+  const handleSendEmail = async () => {
+    if (!email.trim()) {
+      setError("Veuillez entrer un email.");
+      return;
+    }
+
+    setError(null);
+    setNotice(null);
+    setToken(null);
+    setSending(true);
+
+    const result = await sendInviteEmail({
+      restaurantId: restaurantId || undefined,
+      role,
+      email: email.trim(),
+    });
+
+    if (result.error) {
+      setError(result.error);
+      setSending(false);
+      return;
+    }
+
+    setToken(result.token ?? null);
+    setNotice("Email d'invitation envoyé.");
+    setSending(false);
   };
 
   const handleCopy = async () => {
@@ -83,17 +116,35 @@ export function InviteForm({ restaurantId, isOwner }: InviteFormProps) {
           />
         </div>
 
+        {!invitesEmailEnabled && (
+          <p className="text-sm text-amber-600 dark:text-amber-400">
+            Envoi d'email désactivé : définissez NEXT_PUBLIC_INVITES_EMAIL_ENABLED=true.
+          </p>
+        )}
         {error && (
           <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
         )}
+        {notice && (
+          <p className="text-sm text-green-600 dark:text-green-400">{notice}</p>
+        )}
 
-        <button
-          type="submit"
-          disabled={loading || !restaurantId}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? "Création..." : "Générer une invitation"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="submit"
+            disabled={loading || !restaurantId}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+          >
+            {loading ? "Création..." : "Générer le lien"}
+          </button>
+          <button
+            type="button"
+            onClick={handleSendEmail}
+            disabled={sending || !restaurantId || !invitesEmailEnabled}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-gray-900 disabled:opacity-50"
+          >
+            {sending ? "Envoi..." : "Envoyer l'email"}
+          </button>
+        </div>
       </form>
 
       {token && (
