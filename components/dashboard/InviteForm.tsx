@@ -118,7 +118,7 @@ export function InviteForm({ restaurantId, isOwner }: InviteFormProps) {
 
         {!invitesEmailEnabled && (
           <p className="text-sm text-amber-600 dark:text-amber-400">
-            Envoi d'email désactivé : définissez NEXT_PUBLIC_INVITES_EMAIL_ENABLED=true.
+            Envoi d&apos;email désactivé : définissez NEXT_PUBLIC_INVITES_EMAIL_ENABLED=true.
           </p>
         )}
         {error && (
