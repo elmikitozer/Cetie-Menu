@@ -130,7 +130,7 @@ export async function sendInviteEmail(input: {
   try {
     const admin = createAdminClient();
     const { error } = await admin.auth.admin.inviteUserByEmail(input.email, {
-      redirectTo: `${siteUrl}/dashboard`,
+      redirectTo: `${siteUrl}/reset-password`,
       data: {
         invite_token: invite.token,
         restaurant_name: restaurantName,
