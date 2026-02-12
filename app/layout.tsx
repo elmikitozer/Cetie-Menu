@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Toaster } from "sonner";
+import AuthListener from "@/components/auth-listener";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="fr">
       <body className="min-h-screen bg-background text-foreground antialiased">
+        <AuthListener />
         {children}
         <Toaster
           position="bottom-right"
